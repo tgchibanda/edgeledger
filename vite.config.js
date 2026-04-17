@@ -1,13 +1,21 @@
-import { defineConfig } from 'vite'
-import laravel from 'laravel-vite-plugin'
-import vue from '@vitejs/plugin-vue2'
-import path from 'path'
+const { defineConfig } = require('vite')
+const laravel = require('laravel-vite-plugin').default
+const vue = require('@vitejs/plugin-vue2').default
+const path = require('path')
 
-export default defineConfig({
+module.exports = defineConfig({
     plugins: [
-        laravel({ input: ['resources/css/app.css', 'resources/js/app.js'], refresh: true }),
+        laravel({
+            input: ['resources/css/app.css', 'resources/js/app.js'],
+            refresh: true,
+        }),
         vue(),
     ],
-    resolve: { alias: { '@': path.resolve(__dirname, 'resources/js') } },
-    server: { port: 5173, host: '127.0.0.1' },
+    resolve: {
+        alias: { '@': path.resolve(__dirname, 'resources/js') },
+    },
+    server: {
+        port: 5173,
+        host: '127.0.0.1',
+    },
 })
