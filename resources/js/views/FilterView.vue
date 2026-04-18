@@ -99,7 +99,13 @@
         </div>
       </div>
 
-      <ImageLightbox :visible="lightbox.visible" :images="lightbox.images" :start-at="lightbox.startAt" @close="lightbox.visible=false" />
+      <ImageLightbox
+        :visible="lightbox.visible"
+        :trades="trades"
+        :trade-index="lightbox.tradeIndex"
+        :start-at="lightbox.startAt"
+        @close="lightbox.visible=false"
+      />
     </div>
   </AppLayout>
 </template>
@@ -115,7 +121,7 @@ export default {
   data() {
     return {
       trades: [], stats: {}, loading: false, searched: false,
-      lightbox: { visible: false, images: [], startAt: '' },
+      lightbox: { visible: false, tradeIndex: 0, startAt: '' },
     }
   },
   methods: {
@@ -126,7 +132,10 @@ export default {
       const form = this.$refs.filter.getForm()
       this.$router.push({ name:'journal-new', query: { ...form, entry_technique } })
     },
-    openLightbox({ images, startAt }) { this.lightbox = { visible: true, images, startAt } },
+    openLightbox({ images, startAt }) {
+      const tradeIndex = this.trades.findIndex(t => t.images && t.images.some(i => images.some(img => img.id === i.id)))
+      this.lightbox = { visible: true, tradeIndex: tradeIndex >= 0 ? tradeIndex : 0, startAt }
+    },
   },
 }
 </script>
