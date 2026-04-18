@@ -33,12 +33,44 @@
 
     <div v-if="trade.notes" class="mt-2 text-xs text-gray-500 line-clamp-2">{{ trade.notes }}</div>
 
-    <!-- Images -->
-    <div v-if="trade.images && trade.images.length" class="mt-3 flex gap-2">
-      <div v-for="img in trade.images" :key="img.id"
-        class="flex items-center gap-1 px-2 py-1 bg-surface rounded text-xs text-gray-400 border border-border cursor-pointer hover:border-win"
-        @click="$emit('view-image', img)">
-        📷 {{ img.timeframe }}
+    <!-- Image thumbnails inline preview -->
+    <div v-if="trade.images && trade.images.length" class="mt-3">
+      <div class="flex gap-2">
+        <div
+          v-for="img in orderedImages"
+          :key="img.timeframe"
+          class="flex-1 relative group cursor-pointer rounded-lg overflow-hidden border border-border hover:border-win transition-colors"
+          style="height: 160px"
+          @click="$emit('view-images', { images: trade.images, startAt: img.timeframe })">
+
+          <!-- Thumbnail image -->
+          <img
+            v-if="img.path"
+            :src="`/api/images/${img.path}`"
+            class="w-full h-full object-contain bg-gray-900"
+          />
+
+          <!-- Empty slot -->
+          <div v-else class="w-full h-full bg-surface flex items-center justify-center">
+            <span class="text-gray-700 text-xs">No image</span>
+          </div>
+
+          <!-- Timeframe label overlay -->
+          <div class="absolute bottom-0 left-0 right-0 px-2 py-0.5 flex items-center justify-between"
+            style="background: rgba(0,0,0,0.6)">
+            <span class="text-xs font-bold"
+              :class="{
+                'text-blue-300':   img.timeframe === 'H4',
+                'text-purple-300': img.timeframe === 'M15',
+                'text-yellow-300': img.timeframe === 'M1',
+              }">
+              {{ img.timeframe }}
+            </span>
+            <span v-if="img.path" class="text-gray-400 text-xs opacity-0 group-hover:opacity-100 transition-opacity">
+              🔍
+            </span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -54,9 +86,17 @@ export default {
   props: { trade: { type: Object, required: true } },
   computed: {
     resultBadge() {
-      if (this.trade.result === 'win')       return 'badge-win'
-      if (this.trade.result === 'loss')      return 'badge-loss'
+      if (this.trade.result === 'win')  return 'badge-win'
+      if (this.trade.result === 'loss') return 'badge-loss'
       return 'badge-neutral'
+    },
+    orderedImages() {
+      const order = ['H4', 'M15', 'M1']
+      const map   = {}
+      if (this.trade.images) {
+        this.trade.images.forEach(img => { map[img.timeframe] = img })
+      }
+      return order.map(tf => map[tf] || { timeframe: tf, path: null })
     },
   },
   methods: {

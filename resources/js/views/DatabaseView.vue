@@ -47,7 +47,7 @@
         <router-link to="/database/new" class="btn-primary mt-4 inline-block">Add your first trade</router-link>
       </div>
       <div v-else class="space-y-3">
-        <TradeCard v-for="t in trades" :key="t.id" :trade="t" @view-image="openLightbox">
+        <TradeCard v-for="t in trades" :key="t.id" :trade="t" @view-images="openLightbox">
           <template #actions>
             <button @click="toggleReference(t)" class="btn-secondary btn-sm" :class="t.is_reference ? 'text-yellow-400' : ''">
               {{ t.is_reference ? '⭐ Reference' : '☆ Make Reference' }}
@@ -64,7 +64,7 @@
         </div>
       </div>
 
-      <ImageLightbox :visible="lightbox.visible" :src="lightbox.src" :timeframe="lightbox.tf" @close="lightbox.visible=false" />
+      <ImageLightbox :visible="lightbox.visible" :images="lightbox.images" :start-at="lightbox.startAt" @close="lightbox.visible=false" />
     </div>
   </AppLayout>
 </template>
@@ -82,7 +82,7 @@ export default {
       filters: { pair_id:'', result:'', reference: false, valid_only: false },
       pagination: {},
       page: 1,
-      lightbox: { visible: false, src: '', tf: '' },
+      lightbox: { visible: false, images: [], startAt: '' },
     }
   },
   computed: {
@@ -116,7 +116,7 @@ export default {
       this.trades = this.trades.filter(t => t.id !== trade.id)
     },
     changePage(p) { this.page = p; this.load() },
-    openLightbox(img) { this.lightbox = { visible: true, src: `/api/images/${img.path}`, tf: img.timeframe } },
+    openLightbox({ images, startAt }) { this.lightbox = { visible: true, images, startAt } },
   },
 }
 </script>

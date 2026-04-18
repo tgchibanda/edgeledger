@@ -84,7 +84,7 @@
         <div v-if="trades.length" class="card">
           <h2 class="section-title">Historical Examples ({{ trades.length }})</h2>
           <div class="space-y-3">
-            <TradeCard v-for="t in trades" :key="t.id" :trade="t" @view-image="openLightbox">
+            <TradeCard v-for="t in trades" :key="t.id" :trade="t" @view-images="openLightbox">
               <template #actions>
                 <button @click="startJournal(t.entry_technique)" class="btn-secondary btn-sm">📓 Journal</button>
               </template>
@@ -99,7 +99,7 @@
         </div>
       </div>
 
-      <ImageLightbox :visible="lightbox.visible" :src="lightbox.src" :timeframe="lightbox.tf" @close="lightbox.visible=false" />
+      <ImageLightbox :visible="lightbox.visible" :images="lightbox.images" :start-at="lightbox.startAt" @close="lightbox.visible=false" />
     </div>
   </AppLayout>
 </template>
@@ -115,7 +115,7 @@ export default {
   data() {
     return {
       trades: [], stats: {}, loading: false, searched: false,
-      lightbox: { visible: false, src: '', tf: '' },
+      lightbox: { visible: false, images: [], startAt: '' },
     }
   },
   methods: {
@@ -126,9 +126,7 @@ export default {
       const form = this.$refs.filter.getForm()
       this.$router.push({ name:'journal-new', query: { ...form, entry_technique } })
     },
-    openLightbox(img) {
-      this.lightbox = { visible: true, src: `/api/images/${img.path}`, tf: img.timeframe }
-    },
+    openLightbox({ images, startAt }) { this.lightbox = { visible: true, images, startAt } },
   },
 }
 </script>

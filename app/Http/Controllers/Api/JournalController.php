@@ -91,6 +91,7 @@ class JournalController extends Controller
         ]);
         $data['is_valid'] = (bool)$data['followed_rules'];
         $data['status']   = 'completed';
+        $data['followed_rules'] = filter_var($data['followed_rules'], FILTER_VALIDATE_BOOLEAN) ? 1 : 0;
         $journal->update($data);
         $this->handleImages($request, $journal->id);
         return response()->json($journal->load($this->rels()));

@@ -12,6 +12,9 @@ use App\Http\Controllers\Api\ImageController;
 
 Route::post('/login', [AuthController::class, 'login']);
 
+// Images
+    Route::get('images/{path}', [ImageController::class, 'show'])->where('path', '.*');
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout',  [AuthController::class, 'logout']);
     Route::get('/user',     [AuthController::class, 'me']);
@@ -39,9 +42,6 @@ Route::middleware('auth:sanctum')->group(function () {
     // Pairs & Sessions
     Route::apiResource('pairs', PairController::class);
     Route::get('trading-sessions', [TradingSessionController::class, 'index']);
-
-    // Images
-    Route::get('images/{path}', [ImageController::class, 'show'])->where('path', '.*');
 
     // Superuser
     Route::middleware('superuser')->group(function () {

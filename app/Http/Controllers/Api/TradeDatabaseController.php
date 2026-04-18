@@ -22,28 +22,32 @@ class TradeDatabaseController extends Controller
     }
 
     public function store(Request $request)
-    {
-        $data = $request->validate([
-            'h4_category_id'     => 'required|exists:categories,id',
-            'm15_category_id'    => 'required|exists:categories,id',
-            'm1_category_id'     => 'required|exists:categories,id',
-            'pair_id'            => 'required|exists:pairs,id',
-            'trading_session_id' => 'required|exists:trading_sessions,id',
-            'entry_technique'    => 'required|string|max:100',
-            'result'             => 'required|in:win,loss,breakeven',
-            'followed_rules'     => 'required|boolean',
-            'pips_result'        => 'nullable|numeric',
-            'r_multiple'         => 'nullable|numeric',
-            'confluences'        => 'nullable|string|max:500',
-            'mistakes'           => 'nullable|string|max:500',
-            'notes'              => 'nullable|string',
-            'trade_date'         => 'nullable|date',
-        ]);
-        $data['user_id'] = $request->user()->id;
-        $trade = TradeDatabase::create($data);
-        $this->handleImages($request, $trade->id, 'trade_database', TradeImage::class, 'trade_database_id');
-        return response()->json($trade->load($this->rels()), 201);
-    }
+{
+    $data = $request->validate([
+        'h4_category_id'     => 'required|exists:categories,id',
+        'm15_category_id'    => 'required|exists:categories,id',
+        'm1_category_id'     => 'required|exists:categories,id',
+        'pair_id'            => 'required|exists:pairs,id',
+        'trading_session_id' => 'required|exists:trading_sessions,id',
+        'entry_technique'    => 'required|string|max:100',
+        'result'             => 'required|in:win,loss,breakeven',
+        'followed_rules'     => 'required',
+        'pips_result'        => 'nullable|numeric',
+        'r_multiple'         => 'nullable|numeric',
+        'confluences'        => 'nullable|string|max:500',
+        'mistakes'           => 'nullable|string|max:500',
+        'notes'              => 'nullable|string',
+        'trade_date'         => 'nullable|date',
+    ]);
+
+    // Convert string boolean from FormData to integer
+    $data['followed_rules'] = filter_var($data['followed_rules'], FILTER_VALIDATE_BOOLEAN) ? 1 : 0;
+    $data['user_id'] = $request->user()->id;
+
+    $trade = TradeDatabase::create($data);
+    $this->handleImages($request, $trade->id, 'trade_database', TradeImage::class, 'trade_database_id');
+    return response()->json($trade->load($this->rels()), 201);
+}
 
     public function show(Request $request, TradeDatabase $trade)
     {
