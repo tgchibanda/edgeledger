@@ -25,23 +25,23 @@
               </select>
             </div>
             <div>
-              <label class="label">H4 Structure *</label>
+              <label class="label">HTF Structure *</label>
               <select v-model="form.h4_category_id" class="select" required>
-                <option value="">Select H4</option>
+                <option value="">Select HTF</option>
                 <option v-for="c in h4cats" :key="c.id" :value="c.id">{{ c.name }}</option>
               </select>
             </div>
             <div>
-              <label class="label">M15 Structure *</label>
+              <label class="label">MTF Structure *</label>
               <select v-model="form.m15_category_id" class="select" required>
-                <option value="">Select M15</option>
+                <option value="">Select MTF</option>
                 <option v-for="c in m15cats" :key="c.id" :value="c.id">{{ c.name }}</option>
               </select>
             </div>
             <div>
-              <label class="label">M1 Entry *</label>
+              <label class="label">Entry TF *</label>
               <select v-model="form.m1_category_id" class="select" required>
-                <option value="">Select M1</option>
+                <option value="">Select Entry TF</option>
                 <option v-for="c in m1cats" :key="c.id" :value="c.id">{{ c.name }}</option>
               </select>
             </div>

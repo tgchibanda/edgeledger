@@ -16,36 +16,35 @@
         </select>
       </div>
       <div>
-        <label class="label">H4 Structure</label>
+        <label class="label">{{ TF.h4 }} Structure</label>
         <select v-model="form.h4_category_id" class="select" @change="onH4Change">
-          <option value="">Any H4</option>
+          <option value="">Any {{ TF.h4 }}</option>
           <option v-for="c in h4cats" :key="c.id" :value="c.id">
             {{ c.name }}{{ c.trade_count ? ' ('+c.trade_count+')' : '' }}
           </option>
         </select>
       </div>
       <div>
-        <label class="label">M15 Structure</label>
+        <label class="label">{{ TF.m15 }} Structure</label>
         <select v-model="form.m15_category_id" class="select" @change="onM15Change" :disabled="!form.h4_category_id && !allM15.length">
-          <option value="">Any M15</option>
+          <option value="">Any {{ TF.m15 }}</option>
           <option v-for="c in displayM15" :key="c.id" :value="c.id">
             {{ c.name }}{{ c.trade_count ? ' ('+c.trade_count+')' : '' }}
           </option>
         </select>
-        <div v-if="suggestedM15.length" class="text-xs text-win mt-1">↑ Filtered by H4 history</div>
+        <div v-if="suggestedM15.length" class="text-xs text-win mt-1">↑ Filtered by {{ TF.h4 }} history</div>
       </div>
       <div>
-        <label class="label">M1 Entry</label>
+        <label class="label">{{ TF.m1 }} Entry</label>
         <select v-model="form.m1_category_id" class="select" @change="onChange" :disabled="!form.m15_category_id && !allM1.length">
-          <option value="">Any M1</option>
+          <option value="">Any {{ TF.m1 }}</option>
           <option v-for="c in displayM1" :key="c.id" :value="c.id">
             {{ c.name }}{{ c.trade_count ? ' ('+c.trade_count+')' : '' }}
           </option>
         </select>
-        <div v-if="suggestedM1.length" class="text-xs text-win mt-1">↑ Filtered by H4+M15 history</div>
+        <div v-if="suggestedM1.length" class="text-xs text-win mt-1">↑ Filtered by {{ TF.h4 }}+{{ TF.m15 }} history</div>
       </div>
     </div>
-
     <div class="flex gap-3 mt-4">
       <button type="button" class="btn-primary" :disabled="loading" @click="submit">
         {{ loading ? 'Searching…' : '🔍 Find Matching Setups' }}
@@ -56,10 +55,12 @@
 </template>
 
 <script>
+import { TF } from '@/timeframes.js'
 export default {
   name: 'CascadeFilter',
   data() {
     return {
+      TF,
       form: { h4_category_id:'', m15_category_id:'', m1_category_id:'', pair_id:'', trading_session_id:'' },
       suggestedM15: [],
       suggestedM1:  [],
@@ -75,9 +76,7 @@ export default {
     displayM15() { return this.suggestedM15.length ? this.suggestedM15 : this.allM15 },
     displayM1()  { return this.suggestedM1.length  ? this.suggestedM1  : this.allM1 },
   },
-  async created() {
-    await this.$store.dispatch('app/loadAll')
-  },
+  async created() { await this.$store.dispatch('app/loadAll') },
   methods: {
     async onH4Change() {
       this.form.m15_category_id = ''
@@ -85,9 +84,7 @@ export default {
       this.suggestedM15 = []
       this.suggestedM1  = []
       if (this.form.h4_category_id) {
-        const { data } = await this.$http.get('/categories/suggest', {
-          params: { h4_category_id: this.form.h4_category_id }
-        })
+        const { data } = await this.$http.get('/categories/suggest', { params: { h4_category_id: this.form.h4_category_id } })
         this.suggestedM15 = data.m15 || []
       }
       this.onChange()
@@ -96,16 +93,12 @@ export default {
       this.form.m1_category_id = ''
       this.suggestedM1 = []
       if (this.form.h4_category_id && this.form.m15_category_id) {
-        const { data } = await this.$http.get('/categories/suggest', {
-          params: { h4_category_id: this.form.h4_category_id, m15_category_id: this.form.m15_category_id }
-        })
+        const { data } = await this.$http.get('/categories/suggest', { params: { h4_category_id: this.form.h4_category_id, m15_category_id: this.form.m15_category_id } })
         this.suggestedM1 = data.m1 || []
       }
       this.onChange()
     },
-    onChange() {
-      this.$emit('change', { ...this.form })
-    },
+    onChange() { this.$emit('change', { ...this.form }) },
     async submit() {
       this.loading = true
       this.$emit('loading', true)

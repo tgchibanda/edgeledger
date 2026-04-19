@@ -64,7 +64,13 @@
         </div>
       </div>
 
-      <ImageLightbox :visible="lightbox.visible" :images="lightbox.images" :start-at="lightbox.startAt" @close="lightbox.visible=false" />
+      <ImageLightbox
+        :visible="lightbox.visible"
+        :trades="trades"
+        :trade-index="lightbox.tradeIndex"
+        :start-at="lightbox.startAt"
+        @close="lightbox.visible=false"
+      />
     </div>
   </AppLayout>
 </template>
@@ -82,7 +88,7 @@ export default {
       filters: { pair_id:'', result:'', reference: false, valid_only: false },
       pagination: {},
       page: 1,
-      lightbox: { visible: false, images: [], startAt: '' },
+      lightbox: { visible: false, tradeIndex: 0, startAt: '' },
     }
   },
   computed: {
@@ -116,7 +122,11 @@ export default {
       this.trades = this.trades.filter(t => t.id !== trade.id)
     },
     changePage(p) { this.page = p; this.load() },
-    openLightbox({ images, startAt }) { this.lightbox = { visible: true, images, startAt } },
+    openLightbox({ images, startAt }) {
+      // Find which trade these images belong to
+      const tradeIndex = this.trades.findIndex(t => t.images && t.images.some(i => images.some(img => img.id === i.id)))
+      this.lightbox = { visible: true, tradeIndex: tradeIndex >= 0 ? tradeIndex : 0, startAt }
+    },
   },
 }
 </script>
