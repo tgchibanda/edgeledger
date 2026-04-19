@@ -92,7 +92,18 @@ const router = new VueRouter({
     routes
 })
 
-router.beforeEach((to, from, next) => {
+// Track if we've verified the token this session
+let tokenVerified = false
+
+router.beforeEach(async (to, from, next) => {
+    const token = store.state.auth.token
+
+    // On first navigation after a page reload, verify the token is still valid
+    if (token && !tokenVerified) {
+        tokenVerified = true
+        await store.dispatch('auth/verify')
+    }
+
     const loggedIn    = !!store.state.auth.token
     const isSuperuser = store.state.auth.user?.role === 'superuser'
 
