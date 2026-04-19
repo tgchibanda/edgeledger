@@ -1,29 +1,13 @@
 <template>
   <transition name="fade">
-    <div v-if="visible"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black/95"
-      @click.self="close">
+    <div v-if="visible" class="fixed inset-0 z-50 flex items-center justify-center bg-black/95" @click.self="close">
+      <button @click="close" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors z-10 text-lg">✕</button>
 
-      <!-- Close -->
-      <button @click="close"
-        class="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors z-10 text-lg">
-        ✕
-      </button>
-
-      <!-- Navigation arrows -->
       <template v-if="trades && trades.length > 1">
-        <button
-          @click="prev"
-          :disabled="currentIndex === 0"
-          class="absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/10 hover:bg-white/25 text-white flex items-center justify-center transition-colors z-10 text-xl disabled:opacity-20 disabled:cursor-not-allowed">
-          ‹
-        </button>
-        <button
-          @click="next"
-          :disabled="currentIndex === trades.length - 1"
-          class="absolute right-16 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/10 hover:bg-white/25 text-white flex items-center justify-center transition-colors z-10 text-xl disabled:opacity-20 disabled:cursor-not-allowed">
-          ›
-        </button>
+        <button @click="prev" :disabled="currentIndex === 0"
+          class="absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/10 hover:bg-white/25 text-white flex items-center justify-center transition-colors z-10 text-xl disabled:opacity-20 disabled:cursor-not-allowed">‹</button>
+        <button @click="next" :disabled="currentIndex === trades.length - 1"
+          class="absolute right-16 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/10 hover:bg-white/25 text-white flex items-center justify-center transition-colors z-10 text-xl disabled:opacity-20 disabled:cursor-not-allowed">›</button>
       </template>
 
       <!-- Single image mode -->
@@ -34,8 +18,6 @@
 
       <!-- Multi image mode -->
       <div v-else class="w-full flex flex-col px-16 py-10" style="height:100vh">
-
-        <!-- Trade info bar -->
         <div v-if="currentTrade" class="flex items-center gap-3 mb-3 flex-shrink-0 flex-wrap">
           <span class="text-xs text-gray-500">{{ currentIndex + 1 }} / {{ trades.length }}</span>
           <span :class="currentTrade.result === 'win' ? 'badge-win' : currentTrade.result === 'loss' ? 'badge-loss' : 'badge-neutral'">
@@ -46,7 +28,9 @@
           <span class="text-xs text-gray-500">{{ currentTrade.pair && currentTrade.pair.symbol }}</span>
           <span class="text-xs text-gray-500">{{ currentTrade.session && currentTrade.session.name }}</span>
           <span class="text-xs text-gray-600 ml-auto">
-            {{ currentTrade.h4 && currentTrade.h4.name }} → {{ currentTrade.m15 && currentTrade.m15.name }} → {{ currentTrade.m1 && currentTrade.m1.name }}
+            <span class="text-blue-400">{{ TF.h4 }}</span>: {{ currentTrade.h4 && currentTrade.h4.name }}
+            → <span class="text-purple-400">{{ TF.m15 }}</span>: {{ currentTrade.m15 && currentTrade.m15.name }}
+            → <span class="text-yellow-400">{{ TF.m1 }}</span>: {{ currentTrade.m1 && currentTrade.m1.name }}
           </span>
           <span v-if="currentTrade.pips_result" class="text-xs font-semibold" :class="currentTrade.pips_result > 0 ? 'text-win' : 'text-loss'">
             {{ currentTrade.pips_result > 0 ? '+' : '' }}{{ currentTrade.pips_result }} pips
@@ -56,7 +40,6 @@
           </span>
         </div>
 
-        <!-- 3 charts -->
         <div class="flex gap-3" style="flex:1; min-height:0">
           <div v-for="img in orderedImages" :key="img.timeframe" class="flex-1 flex flex-col min-w-0">
             <div class="text-center mb-1.5 flex-shrink-0">
@@ -66,67 +49,49 @@
                   'bg-purple-900/60 text-purple-300': img.timeframe === 'M15',
                   'bg-yellow-900/60 text-yellow-300': img.timeframe === 'M1',
                 }">
-                {{ img.timeframe }}
+                {{ img.timeframe === 'H4' ? TF.h4 : img.timeframe === 'M15' ? TF.m15 : TF.m1 }}
               </span>
             </div>
             <div class="flex-1 rounded-xl overflow-hidden bg-gray-900 flex items-center justify-center min-h-0 transition-all"
               :class="startAt === img.timeframe ? 'border-2 border-win' : 'border border-gray-800'">
-              <img v-if="img.path"
-                :src="`/api/images/${img.path}`"
-                class="w-full h-full object-contain"
-              />
+              <img v-if="img.path" :src="`/api/images/${img.path}`" class="w-full h-full object-contain" />
               <div v-else class="text-center text-gray-600 p-4">
                 <div class="text-3xl mb-2">📷</div>
-                <div class="text-xs">No {{ img.timeframe }} image</div>
+                <div class="text-xs">No {{ img.timeframe === 'H4' ? TF.h4 : img.timeframe === 'M15' ? TF.m15 : TF.m1 }} image</div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Notes bar -->
-        <div v-if="currentTrade && currentTrade.notes" class="mt-2 flex-shrink-0 text-xs text-gray-500 truncate">
-          {{ currentTrade.notes }}
-        </div>
-
-        <!-- Keyboard hint -->
-        <div class="mt-2 flex-shrink-0 text-center text-xs text-gray-700">
-          ← → arrow keys to navigate · Esc to close
-        </div>
+        <div v-if="currentTrade && currentTrade.notes" class="mt-2 flex-shrink-0 text-xs text-gray-500 truncate">{{ currentTrade.notes }}</div>
+        <div class="mt-2 flex-shrink-0 text-center text-xs text-gray-700">← → arrow keys to navigate · Esc to close</div>
       </div>
-
     </div>
   </transition>
 </template>
 
 <script>
+import { TF } from '@/timeframes.js'
 export default {
   name: 'ImageLightbox',
   props: {
-    visible:   { type: Boolean, default: false },
-    src:       { type: String,  default: '' },
-    timeframe: { type: String,  default: '' },
-    // Multi mode
-    images:    { type: Array,   default: () => [] },
-    startAt:   { type: String,  default: '' },
-    // Navigation mode — pass full trades list and starting index
-    trades:    { type: Array,   default: () => [] },
-    tradeIndex:{ type: Number,  default: 0 },
+    visible:    { type: Boolean, default: false },
+    src:        { type: String,  default: '' },
+    timeframe:  { type: String,  default: '' },
+    images:     { type: Array,   default: () => [] },
+    startAt:    { type: String,  default: '' },
+    trades:     { type: Array,   default: () => [] },
+    tradeIndex: { type: Number,  default: 0 },
   },
-  data() {
-    return { currentIndex: 0 }
-  },
+  data() { return { TF, currentIndex: 0 } },
   watch: {
-    visible(v)     { if (v) this.currentIndex = this.tradeIndex },
-    tradeIndex(v)  { this.currentIndex = v },
+    visible(v)    { if (v) this.currentIndex = this.tradeIndex },
+    tradeIndex(v) { this.currentIndex = v },
   },
   computed: {
-    currentTrade() {
-      return this.trades.length ? this.trades[this.currentIndex] : null
-    },
+    currentTrade()  { return this.trades.length ? this.trades[this.currentIndex] : null },
     currentImages() {
-      if (this.trades.length && this.currentTrade) {
-        return this.currentTrade.images || []
-      }
+      if (this.trades.length && this.currentTrade) return this.currentTrade.images || []
       return this.images
     },
     orderedImages() {
@@ -144,9 +109,9 @@ export default {
     prev()   { if (this.currentIndex > 0) this.currentIndex-- },
     onKey(e) {
       if (!this.visible) return
-      if (e.key === 'Escape')      this.close()
-      if (e.key === 'ArrowRight')  this.next()
-      if (e.key === 'ArrowLeft')   this.prev()
+      if (e.key === 'Escape')     this.close()
+      if (e.key === 'ArrowRight') this.next()
+      if (e.key === 'ArrowLeft')  this.prev()
     },
   },
 }

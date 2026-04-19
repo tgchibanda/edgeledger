@@ -3,9 +3,9 @@
     <table class="w-full text-sm">
       <thead class="border-b border-border">
         <tr>
-          <th class="th">H4</th>
-          <th class="th">M15</th>
-          <th class="th">M1</th>
+          <th class="th">{{ TF.h4 }}</th>
+          <th class="th">{{ TF.m15 }}</th>
+          <th class="th">{{ TF.m1 }}</th>
           <th class="th">Entry</th>
           <th class="th">Pair</th>
           <th class="th text-right">Total</th>
@@ -52,12 +52,14 @@
 </template>
 
 <script>
+import { TF } from '@/timeframes.js'
 export default {
   name: 'WinRateTable',
   props: {
-    rows:   { type: Array,   default: () => [] },
-    showR:  { type: Boolean, default: true },
+    rows:  { type: Array,   default: () => [] },
+    showR: { type: Boolean, default: true },
   },
+  data() { return { TF } },
   methods: {
     rateClass(r) {
       if (r >= 60) return 'text-win'

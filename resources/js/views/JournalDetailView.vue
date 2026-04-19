@@ -23,9 +23,9 @@
           <div><span class="text-gray-500">Pair:</span> <span class="text-white">{{ journal.pair && journal.pair.symbol }}</span></div>
           <div><span class="text-gray-500">Session:</span> <span class="text-white">{{ journal.session && journal.session.name }}</span></div>
           <div><span class="text-gray-500">Entry:</span> <span class="text-white">{{ journal.entry_technique }}</span></div>
-          <div><span class="text-gray-500">H4:</span> <span class="text-blue-400">{{ journal.h4 && journal.h4.name }}</span></div>
-          <div><span class="text-gray-500">M15:</span> <span class="text-purple-400">{{ journal.m15 && journal.m15.name }}</span></div>
-          <div><span class="text-gray-500">M1:</span> <span class="text-yellow-400">{{ journal.m1 && journal.m1.name }}</span></div>
+          <div><span class="text-gray-500">HTF:</span> <span class="text-blue-400">{{ journal.h4 && journal.h4.name }}</span></div>
+          <div><span class="text-gray-500">MTF:</span> <span class="text-purple-400">{{ journal.m15 && journal.m15.name }}</span></div>
+          <div><span class="text-gray-500">Entry TF:</span> <span class="text-yellow-400">{{ journal.m1 && journal.m1.name }}</span></div>
           <div v-if="journal.pips_result"><span class="text-gray-500">Pips:</span> <span :class="journal.pips_result>0?'text-win':'text-loss'">{{ journal.pips_result > 0 ? '+' : '' }}{{ journal.pips_result }}</span></div>
           <div v-if="journal.r_multiple"><span class="text-gray-500">R:</span> <span :class="journal.r_multiple>0?'text-win':'text-loss'">{{ journal.r_multiple > 0 ? '+' : '' }}{{ journal.r_multiple }}R</span></div>
         </div>
