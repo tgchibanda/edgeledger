@@ -8,8 +8,9 @@ export default new Vuex.Store({
         auth: {
             namespaced: true,
             state: () => ({
-                token: null,
-                user: null,
+                // Rehydrate from localStorage immediately on page load
+                token: localStorage.getItem('el_token') || null,
+                user:  JSON.parse(localStorage.getItem('el_user') || 'null'),
             }),
             mutations: {
                 SET_TOKEN(state, token) { state.token = token },
@@ -31,6 +32,21 @@ export default new Vuex.Store({
                     localStorage.removeItem('el_token')
                     localStorage.removeItem('el_user')
                 },
+                // Called on app boot to verify token is still valid
+                async verify({ commit, state }) {
+                    if (!state.token) return false
+                    try {
+                        const { data } = await Vue.prototype.$http.get('/user')
+                        commit('SET_USER', data)
+                        return true
+                    } catch(e) {
+                        // Token expired or invalid — clear it
+                        commit('CLEAR')
+                        localStorage.removeItem('el_token')
+                        localStorage.removeItem('el_user')
+                        return false
+                    }
+                },
             },
             getters: {
                 isLoggedIn:  s => !!s.token,
@@ -47,9 +63,9 @@ export default new Vuex.Store({
                 categories: { H4: [], M15: [], M1: [] },
             }),
             mutations: {
-                SET_SESSIONS(state, v)           { state.sessions = v },
-                SET_PAIRS(state, v)              { state.pairs    = v },
-                SET_CATS(state, { tf, list })    { state.categories[tf] = list },
+                SET_SESSIONS(state, v)        { state.sessions = v },
+                SET_PAIRS(state, v)           { state.pairs    = v },
+                SET_CATS(state, { tf, list }) { state.categories[tf] = list },
             },
             actions: {
                 async loadSessions({ commit, state }) {

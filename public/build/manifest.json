@@ -1,0 +1,184 @@
+{
+  "_AppLayout-cb9ee147.js": {
+    "file": "assets/AppLayout-cb9ee147.js",
+    "imports": [
+      "resources/js/app.js"
+    ]
+  },
+  "_ImageLightbox-59f42e1c.js": {
+    "file": "assets/ImageLightbox-59f42e1c.js",
+    "imports": [
+      "_timeframes-17c9dafb.js",
+      "resources/js/app.js"
+    ]
+  },
+  "_ImageUploader-08a238a7.js": {
+    "file": "assets/ImageUploader-08a238a7.js",
+    "imports": [
+      "resources/js/app.js"
+    ]
+  },
+  "_RulesToggle-fb73a40a.js": {
+    "file": "assets/RulesToggle-fb73a40a.js",
+    "imports": [
+      "resources/js/app.js"
+    ]
+  },
+  "_TradeCard-752ad7eb.js": {
+    "file": "assets/TradeCard-752ad7eb.js",
+    "imports": [
+      "_timeframes-17c9dafb.js",
+      "resources/js/app.js"
+    ]
+  },
+  "_timeframes-17c9dafb.js": {
+    "file": "assets/timeframes-17c9dafb.js"
+  },
+  "resources/css/app.css": {
+    "file": "assets/app-6a816566.css",
+    "isEntry": true,
+    "src": "resources/css/app.css"
+  },
+  "resources/js/app.js": {
+    "dynamicImports": [
+      "resources/js/views/LoginView.vue",
+      "resources/js/views/DashboardView.vue",
+      "resources/js/views/FilterView.vue",
+      "resources/js/views/DatabaseView.vue",
+      "resources/js/views/TradeFormView.vue",
+      "resources/js/views/TradeFormView.vue",
+      "resources/js/views/JournalView.vue",
+      "resources/js/views/JournalFormView.vue",
+      "resources/js/views/JournalDetailView.vue",
+      "resources/js/views/AnalyticsView.vue",
+      "resources/js/views/CategoriesView.vue",
+      "resources/js/views/PairsView.vue",
+      "resources/js/views/admin/UsersView.vue"
+    ],
+    "file": "assets/app-88fcff71.js",
+    "isEntry": true,
+    "src": "resources/js/app.js"
+  },
+  "resources/js/views/AnalyticsView.vue": {
+    "file": "assets/AnalyticsView-85acb462.js",
+    "imports": [
+      "_AppLayout-cb9ee147.js",
+      "_timeframes-17c9dafb.js",
+      "resources/js/app.js"
+    ],
+    "isDynamicEntry": true,
+    "src": "resources/js/views/AnalyticsView.vue"
+  },
+  "resources/js/views/CategoriesView.vue": {
+    "file": "assets/CategoriesView-9c16be8a.js",
+    "imports": [
+      "_AppLayout-cb9ee147.js",
+      "_timeframes-17c9dafb.js",
+      "resources/js/app.js"
+    ],
+    "isDynamicEntry": true,
+    "src": "resources/js/views/CategoriesView.vue"
+  },
+  "resources/js/views/DashboardView.vue": {
+    "file": "assets/DashboardView-0b517ad3.js",
+    "imports": [
+      "_AppLayout-cb9ee147.js",
+      "resources/js/app.js"
+    ],
+    "isDynamicEntry": true,
+    "src": "resources/js/views/DashboardView.vue"
+  },
+  "resources/js/views/DatabaseView.vue": {
+    "file": "assets/DatabaseView-b0fae9cb.js",
+    "imports": [
+      "_AppLayout-cb9ee147.js",
+      "_TradeCard-752ad7eb.js",
+      "_ImageLightbox-59f42e1c.js",
+      "resources/js/app.js",
+      "_timeframes-17c9dafb.js"
+    ],
+    "isDynamicEntry": true,
+    "src": "resources/js/views/DatabaseView.vue"
+  },
+  "resources/js/views/FilterView.vue": {
+    "file": "assets/FilterView-686e80f3.js",
+    "imports": [
+      "_AppLayout-cb9ee147.js",
+      "_timeframes-17c9dafb.js",
+      "resources/js/app.js",
+      "_TradeCard-752ad7eb.js",
+      "_ImageLightbox-59f42e1c.js"
+    ],
+    "isDynamicEntry": true,
+    "src": "resources/js/views/FilterView.vue"
+  },
+  "resources/js/views/JournalDetailView.vue": {
+    "file": "assets/JournalDetailView-8cfdacdf.js",
+    "imports": [
+      "_AppLayout-cb9ee147.js",
+      "_RulesToggle-fb73a40a.js",
+      "_ImageUploader-08a238a7.js",
+      "_ImageLightbox-59f42e1c.js",
+      "resources/js/app.js",
+      "_timeframes-17c9dafb.js"
+    ],
+    "isDynamicEntry": true,
+    "src": "resources/js/views/JournalDetailView.vue"
+  },
+  "resources/js/views/JournalFormView.vue": {
+    "file": "assets/JournalFormView-841f73ae.js",
+    "imports": [
+      "_AppLayout-cb9ee147.js",
+      "_ImageUploader-08a238a7.js",
+      "resources/js/app.js"
+    ],
+    "isDynamicEntry": true,
+    "src": "resources/js/views/JournalFormView.vue"
+  },
+  "resources/js/views/JournalView.vue": {
+    "file": "assets/JournalView-1a54fa91.js",
+    "imports": [
+      "_AppLayout-cb9ee147.js",
+      "resources/js/app.js"
+    ],
+    "isDynamicEntry": true,
+    "src": "resources/js/views/JournalView.vue"
+  },
+  "resources/js/views/LoginView.vue": {
+    "file": "assets/LoginView-d4a22faf.js",
+    "imports": [
+      "resources/js/app.js"
+    ],
+    "isDynamicEntry": true,
+    "src": "resources/js/views/LoginView.vue"
+  },
+  "resources/js/views/PairsView.vue": {
+    "file": "assets/PairsView-9377612d.js",
+    "imports": [
+      "_AppLayout-cb9ee147.js",
+      "resources/js/app.js"
+    ],
+    "isDynamicEntry": true,
+    "src": "resources/js/views/PairsView.vue"
+  },
+  "resources/js/views/TradeFormView.vue": {
+    "file": "assets/TradeFormView-cb2b2988.js",
+    "imports": [
+      "_AppLayout-cb9ee147.js",
+      "_RulesToggle-fb73a40a.js",
+      "_ImageUploader-08a238a7.js",
+      "resources/js/app.js"
+    ],
+    "isDynamicEntry": true,
+    "src": "resources/js/views/TradeFormView.vue"
+  },
+  "resources/js/views/admin/UsersView.vue": {
+    "file": "assets/UsersView-6fd902d7.js",
+    "imports": [
+      "_AppLayout-cb9ee147.js",
+      "resources/js/app.js"
+    ],
+    "isDynamicEntry": true,
+    "src": "resources/js/views/admin/UsersView.vue"
+  }
+}
