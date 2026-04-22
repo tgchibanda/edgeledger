@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Console\Commands;
 
 use App\Models\Candle;
@@ -22,11 +23,11 @@ class ImportCandles extends Command
         $timeframe = strtoupper($this->argument('timeframe'));
 
         // Validate arguments
-        if (!in_array($pair, ['EURUSD','GBPUSD','AUDUSD'])) {
+        if (!in_array($pair, ['EURUSD', 'GBPUSD', 'AUDUSD'])) {
             $this->error("Invalid pair: {$pair}. Must be EURUSD, GBPUSD, or AUDUSD.");
             return 1;
         }
-        if (!in_array($timeframe, ['M1','M5','M15','M30','H1','H4','D1'])) {
+        if (!in_array($timeframe, ['M1', 'M5', 'M15', 'M30', 'H1', 'H4', 'D1'])) {
             $this->error("Invalid timeframe: {$timeframe}. Must be M1, M5, M15, M30, H1, H4, or D1.");
             return 1;
         }
@@ -102,7 +103,7 @@ class ImportCandles extends Command
 
         $this->newLine();
         $this->info("Done!");
-        $this->table(['Metric','Count'], [
+        $this->table(['Metric', 'Count'], [
             ['Lines processed', $lineNum],
             ['Candles inserted', $inserted],
             ['Duplicates skipped', $skipped],
@@ -120,9 +121,9 @@ class ImportCandles extends Command
         foreach ($batch as $row) {
             try {
                 $exists = Candle::where('pair',      $row['pair'])
-                                ->where('timeframe', $row['timeframe'])
-                                ->where('timestamp', $row['timestamp'])
-                                ->exists();
+                    ->where('timeframe', $row['timeframe'])
+                    ->where('timestamp', $row['timestamp'])
+                    ->exists();
                 if ($exists) {
                     $skipped++;
                 } else {
@@ -134,7 +135,7 @@ class ImportCandles extends Command
             }
         }
 
-        return compact('inserted','skipped');
+        return compact('inserted', 'skipped');
     }
 
     private function parseLine(string $line): ?array
@@ -147,32 +148,56 @@ class ImportCandles extends Command
             $parts = str_getcsv($line, ';');
         }
 
-        if (count($parts) < 5) return null;
+        if (count($parts) < 6) return null;
 
-        // Clean up parts
         $parts = array_map('trim', $parts);
 
-        // Detect if first column is a Unix timestamp (all digits)
-        if (is_numeric($parts[0]) && strlen($parts[0]) >= 10) {
-            // Unix timestamp format
+        /**
+         * FORMAT HANDLING
+         * ----------------------------------
+         * Format D (your file):
+         * Date, Time, Open, High, Low, Close, Volume
+         * Example:
+         * 2025.01.01,17:00,1.035030,1.035140,1.035030,1.035140,0
+         */
+
+        // Detect split date + time format
+        if (preg_match('/^\d{4}\.\d{2}\.\d{2}$/', $parts[0]) && preg_match('/^\d{2}:\d{2}/', $parts[1])) {
+            $dateTimeStr = $parts[0] . ' ' . $parts[1];
+
+            try {
+                $ts = Carbon::createFromFormat('Y.m.d H:i', $dateTimeStr, 'UTC');
+            } catch (\Exception $e) {
+                return null;
+            }
+
+            $open   = (float)$parts[2];
+            $high   = (float)$parts[3];
+            $low    = (float)$parts[4];
+            $close  = (float)$parts[5];
+            $volume = isset($parts[6]) ? (int)$parts[6] : 0;
+        }
+        // Existing Unix timestamp format
+        elseif (is_numeric($parts[0]) && strlen($parts[0]) >= 10) {
             $ts     = Carbon::createFromTimestamp((int)$parts[0])->utc();
             $open   = (float)$parts[1];
             $high   = (float)$parts[2];
             $low    = (float)$parts[3];
             $close  = (float)$parts[4];
             $volume = isset($parts[5]) ? (int)$parts[5] : 0;
-        } else {
-            // Date string format — try multiple formats
+        }
+        // Single datetime column formats
+        else {
             $dateStr = $parts[0];
             $ts = null;
 
             $formats = [
-                'd.m.Y H:i:s.v',  // Dukascopy: 01.01.2024 00:00:00.000
-                'd.m.Y H:i:s',    // Dukascopy without ms
-                'Y.m.d H:i:s',    // alternate
-                'Y-m-d H:i:s',    // standard MySQL
-                'Y-m-d H:i',      // without seconds
-                'd/m/Y H:i:s',    // slash format
+                'd.m.Y H:i:s.v',
+                'd.m.Y H:i:s',
+                'Y.m.d H:i:s',
+                'Y-m-d H:i:s',
+                'Y-m-d H:i',
+                'd/m/Y H:i:s',
                 'Y/m/d H:i:s',
             ];
 
@@ -180,12 +205,16 @@ class ImportCandles extends Command
                 try {
                     $ts = Carbon::createFromFormat($fmt, $dateStr, 'UTC');
                     if ($ts) break;
-                } catch (\Exception $e) {}
+                } catch (\Exception $e) {
+                }
             }
 
             if (!$ts) {
-                // Last resort: let Carbon parse it
-                try { $ts = Carbon::parse($dateStr)->utc(); } catch (\Exception $e) { return null; }
+                try {
+                    $ts = Carbon::parse($dateStr)->utc();
+                } catch (\Exception $e) {
+                    return null;
+                }
             }
 
             $open   = (float)$parts[1];
@@ -195,7 +224,7 @@ class ImportCandles extends Command
             $volume = isset($parts[5]) ? (int)$parts[5] : 0;
         }
 
-        // Basic sanity check
+        // Validation
         if ($open <= 0 || $high <= 0 || $low <= 0 || $close <= 0) return null;
         if ($high < $low) return null;
 
