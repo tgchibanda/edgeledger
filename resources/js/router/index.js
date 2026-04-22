@@ -24,6 +24,12 @@ const routes = [
         meta: { auth: true }
     },
     {
+        path: '/replay/import',
+        name: 'replay-import',
+        component: () => import('../views/CandleImportView.vue'),
+        meta: { auth: true }
+    },
+    {
         path: '/filter',
         name: 'filter',
         component: () => import('../views/FilterView.vue'),

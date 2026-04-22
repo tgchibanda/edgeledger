@@ -9,10 +9,9 @@ use App\Http\Controllers\Api\UserManagementController;
 use App\Http\Controllers\Api\PairController;
 use App\Http\Controllers\Api\TradingSessionController;
 use App\Http\Controllers\Api\ImageController;
-use App\Http\Controllers\Api\TrainingImageController;
-use App\Http\Controllers\Api\ScannerController;
-
 use App\Http\Controllers\Api\CandleController;
+
+use App\Http\Controllers\Api\CandleImportController;
 
 Route::post('/login', [AuthController::class, 'login']);
 
@@ -48,21 +47,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('pairs', PairController::class);
     Route::get('trading-sessions', [TradingSessionController::class, 'index']);
 
-    // Images
-    // Training images
-    Route::get('training-images/stats',    [TrainingImageController::class, 'stats']);
-    Route::get('training-images/export',   [TrainingImageController::class, 'exportManifest']);
-    Route::apiResource('training-images',  TrainingImageController::class)->only(['index','store','destroy']);
-
     // Candles / Replay
-    Route::get('candles',       [CandleController::class, 'index']);
-    Route::get('candles/range', [CandleController::class, 'range']);
+    Route::get('candles',            [CandleController::class,       'index']);
+    Route::get('candles/range',      [CandleController::class,       'range']);
+    Route::post('candles/upload',    [CandleImportController::class, 'upload']);
+    Route::get('candles/stats',      [CandleImportController::class, 'stats']);
+    Route::delete('candles',         [CandleImportController::class, 'destroy']);
 
-    // Scanner
-    Route::get('scanner/bias',          [ScannerController::class, 'getBias']);
-    Route::post('scanner/bias',         [ScannerController::class, 'setBias']);
-    Route::delete('scanner/bias',       [ScannerController::class, 'cancelBias']);
-    Route::get('scanner/history',       [ScannerController::class, 'history']);
 
     // Superuser
     Route::middleware('superuser')->group(function () {

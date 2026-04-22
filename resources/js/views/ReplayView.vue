@@ -143,11 +143,9 @@
       <!-- Empty state -->
       <div v-if="!loading && allCandles.length === 0" class="replay-empty">
         <div class="replay-empty__icon">📉</div>
-        <div class="replay-empty__title">No candle data</div>
-        <div class="replay-empty__sub">
-          Import data using the artisan command:<br/>
-          <code>php artisan candles:import file.csv {{ selectedPair }} {{ selectedTF }}</code>
-        </div>
+        <div class="replay-empty__title">No candle data for {{ selectedPair }} {{ selectedTF }}</div>
+        <div class="replay-empty__sub">Upload a Dukascopy CSV file to get started.</div>
+        <router-link to="/replay/import" class="replay-empty__btn">📥 Import Data</router-link>
       </div>
 
     </div>
@@ -752,17 +750,18 @@ export default {
 .replay-empty__icon { font-size: 40px; }
 .replay-empty__title { font-size: 18px; font-weight: 700; color: #fff; }
 .replay-empty__sub { font-size: 13px; color: #4A5568; text-align: center; line-height: 1.7; }
-.replay-empty__sub code {
-  display: block;
+.replay-empty__btn {
   margin-top: 8px;
-  padding: 8px 16px;
-  background: #0F1923;
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 6px;
-  color: #1D9E75;
-  font-family: monospace;
-  font-size: 12px;
+  padding: 10px 24px;
+  background: linear-gradient(135deg, #1D9E75, #0F6E56);
+  color: #fff;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: opacity 0.2s;
 }
+.replay-empty__btn:hover { opacity: 0.85; }
 
 /* ── Utility ── */
 .text-win  { color: #1D9E75; }
