@@ -23,6 +23,9 @@ const routes = [
         component: () => import('../views/ReplayView.vue'),
         meta: { auth: true }
     },
+        component: () => import('../views/ScannerView.vue'),
+        meta: { auth: true }
+    },
     {
         path: '/filter',
         name: 'filter',

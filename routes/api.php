@@ -9,11 +9,16 @@ use App\Http\Controllers\Api\UserManagementController;
 use App\Http\Controllers\Api\PairController;
 use App\Http\Controllers\Api\TradingSessionController;
 use App\Http\Controllers\Api\ImageController;
+use App\Http\Controllers\Api\TrainingImageController;
+use App\Http\Controllers\Api\ScannerController;
+
+use App\Http\Controllers\Api\CandleController;
 
 Route::post('/login', [AuthController::class, 'login']);
 
-// Images
-    Route::get('images/{path}', [ImageController::class, 'show'])->where('path', '.*');
+// Public routes — no auth needed
+Route::get('images/{path}',   [ImageController::class, 'show'])->where('path', '.*');
+Route::get('debug-storage',   [ImageController::class, 'debugStorage']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout',  [AuthController::class, 'logout']);
@@ -42,6 +47,22 @@ Route::middleware('auth:sanctum')->group(function () {
     // Pairs & Sessions
     Route::apiResource('pairs', PairController::class);
     Route::get('trading-sessions', [TradingSessionController::class, 'index']);
+
+    // Images
+    // Training images
+    Route::get('training-images/stats',    [TrainingImageController::class, 'stats']);
+    Route::get('training-images/export',   [TrainingImageController::class, 'exportManifest']);
+    Route::apiResource('training-images',  TrainingImageController::class)->only(['index','store','destroy']);
+
+    // Candles / Replay
+    Route::get('candles',       [CandleController::class, 'index']);
+    Route::get('candles/range', [CandleController::class, 'range']);
+
+    // Scanner
+    Route::get('scanner/bias',          [ScannerController::class, 'getBias']);
+    Route::post('scanner/bias',         [ScannerController::class, 'setBias']);
+    Route::delete('scanner/bias',       [ScannerController::class, 'cancelBias']);
+    Route::get('scanner/history',       [ScannerController::class, 'history']);
 
     // Superuser
     Route::middleware('superuser')->group(function () {

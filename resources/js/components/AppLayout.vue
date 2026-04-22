@@ -70,6 +70,8 @@ export default {
     navItems() {
       return [
         { to: '/',           label: 'Dashboard',        icon: '📊' },
+        { to: '/scanner',    label: 'Scanner',           icon: '🤖' },
+        { to: '/replay',     label: 'Replay',            icon: '🎬' },
         { to: '/filter',     label: 'Pre-Trade Filter',  icon: '🔍' },
         { to: '/database',   label: 'Trade Database',    icon: '🗄️' },
         { to: '/journal',    label: 'Journal',           icon: '📓' },
