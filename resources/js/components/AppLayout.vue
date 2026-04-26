@@ -109,6 +109,7 @@
               <div :class="['nav-item', isActive ? 'nav-item--active' : '']" @click="navigate($event); mobileOpen=false">
                 <span class="nav-item__icon">💰</span>
                 <span class="nav-item__label">Revenue</span>
+                <span v-if="pendingSubCount > 0" class="nav-item__badge">{{ pendingSubCount }}</span>
               </div>
             </router-link>
           </template>
@@ -153,7 +154,11 @@
 export default {
   name: 'AppLayout',
   data() {
-    return { mobileOpen: false }
+    return {
+      mobileOpen:    false,
+      pendingSubCount: 0,
+      pollTimer:     null,
+    }
   },
   computed: {
     user()        { return this.$store.state.auth.user },
@@ -164,6 +169,9 @@ export default {
       const u = this.user
       if (!u) return false
       if (u.role === 'superuser') return true
+      // Use the server-computed has_access field (updated by verify/me endpoint)
+      // Fall back to local checks if field not yet populated
+      if (typeof u.has_access === 'boolean') return u.has_access
       if (u.on_trial) return true
       if (u.subscription?.status === 'active') return true
       return false
@@ -212,13 +220,42 @@ export default {
       if (u.on_trial && daysLeft <= 7 && daysLeft > 0) {
         return { type: 'warning', message: `⏳ Trial ends in ${daysLeft} day${daysLeft===1?'':'s'}.`, cta: 'Subscribe' }
       }
-      if (!this.hasAccess) {
+      // Use server-computed has_access
+      const access = typeof u.has_access === 'boolean' ? u.has_access : (u.on_trial || hasSub)
+      if (!access) {
         return { type: 'expired', message: '🔒 Trial ended. Subscribe to continue.', cta: 'Subscribe now' }
       }
       return null
     },
   },
+  async mounted() {
+    // Refresh user state immediately on mount to pick up any admin changes
+    await this.$store.dispatch('auth/verify')
+
+    if (this.isSuperuser) {
+      await this.fetchPendingCount()
+      this.pollTimer = setInterval(() => this.fetchPendingCount(), 60000)
+    } else {
+      // Poll me() every 30s so subscription activation reflects without page reload
+      this.pollTimer = setInterval(() => this.$store.dispatch('auth/verify'), 30000)
+    }
+  },
+  beforeDestroy() {
+    if (this.pollTimer) clearInterval(this.pollTimer)
+  },
+  watch: {
+    '$route'() {
+      if (this.isSuperuser) this.fetchPendingCount()
+    },
+  },
   methods: {
+    async fetchPendingCount() {
+      if (!this.isSuperuser) return
+      try {
+        const { data } = await this.$http.get('/admin/subscription/pending-count')
+        this.pendingSubCount = data.count || 0
+      } catch(e) {}
+    },
     async logout() {
       await this.$store.dispatch('auth/logout')
       this.$router.push('/login')
@@ -340,6 +377,18 @@ export default {
 .nav-item__icon  { width: 20px; text-align: center; font-size: 15px; flex-shrink: 0; }
 .nav-item__label { font-size: 13px; color: #94A3B8; flex: 1; }
 .nav-item__lock  { font-size: 11px; }
+.nav-item__badge {
+  min-width: 18px; height: 18px; border-radius: 9px;
+  background: #E24B4A; color: #fff;
+  font-size: 10px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 5px; flex-shrink: 0;
+  animation: badge-pulse 2s ease-in-out infinite;
+}
+@keyframes badge-pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(226,75,74,.4); }
+  50%      { box-shadow: 0 0 0 4px rgba(226,75,74,0); }
+}
 
 /* ── User footer ─────────────────────────────────────────────────── */
 .sidebar__user {
