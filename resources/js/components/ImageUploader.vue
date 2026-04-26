@@ -1,7 +1,7 @@
 <template>
   <div class="grid grid-cols-3 gap-4">
     <div v-for="tf in timeframes" :key="tf" class="flex flex-col gap-2">
-      <label class="label">{{ tf }} Chart</label>
+      <label class="label">{{ tfLabel(tf) }} Chart</label>
       <div
         class="relative border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer transition-colors h-32 overflow-hidden"
         :class="previews[tf] ? 'border-win/50' : 'border-border hover:border-win/50'"
@@ -9,7 +9,7 @@
         @dragover.prevent
         @drop.prevent="onDrop($event, tf)"
       >
-        <img v-if="previews[tf]" :src="previews[tf]" class="absolute inset-0 w-full h-full object-cover rounded-xl" />
+        <img v-if="previews[tf]" :src="previews[tf]" class="absolute inset-0 w-full h-full object-contain rounded-xl" />
         <div v-else class="text-center px-2">
           <div class="text-2xl mb-1">📷</div>
           <div class="text-xs text-gray-500">Click or drop</div>
@@ -25,6 +25,7 @@
 </template>
 
 <script>
+import { TF } from '@/timeframes.js'
 export default {
   name: 'ImageUploader',
   props: {
@@ -34,11 +35,14 @@ export default {
   data() {
     return {
       timeframes: ['H4', 'M15', 'M1'],
-      previews: { H4: null, M15: null, M1: null },
-      files:    { H4: null, M15: null, M1: null },
+      previews:   { H4: null, M15: null, M1: null },
+      files:      { H4: null, M15: null, M1: null },
     }
   },
   methods: {
+    tfLabel(tf) {
+      return tf === 'H4' ? TF.h4 : tf === 'M15' ? TF.m15 : TF.m1
+    },
     triggerInput(tf) { this.$refs['input_'+tf][0].click() },
     onFile(e, tf)    { const f = e.target.files[0]; if (f) this.setFile(tf, f) },
     onDrop(e, tf)    { const f = e.dataTransfer.files[0]; if (f && f.type.startsWith('image/')) this.setFile(tf, f) },

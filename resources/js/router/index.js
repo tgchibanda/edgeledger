@@ -78,9 +78,27 @@ const routes = [
         meta: { auth: true }
     },
     {
+        path: '/subscription',
+        name: 'subscription',
+        component: () => import('../views/SubscriptionView.vue'),
+        meta: { auth: true }
+    },
+    {
+        path: '/referral',
+        name: 'referral',
+        component: () => import('../views/ReferralView.vue'),
+        meta: { auth: true }
+    },
+    {
         path: '/admin/users',
         name: 'admin-users',
         component: () => import('../views/admin/UsersView.vue'),
+        meta: { auth: true, superuser: true }
+    },
+    {
+        path: '/admin/revenue',
+        name: 'admin-revenue',
+        component: () => import('../views/admin/AdminRevenueView.vue'),
         meta: { auth: true, superuser: true }
     },
     { path: '*', redirect: '/' }

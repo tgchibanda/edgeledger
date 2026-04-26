@@ -39,7 +39,7 @@
             class="flex items-center gap-2 px-3 py-2 bg-surface rounded-lg border border-border cursor-pointer hover:border-win transition-colors"
             @click="openLightbox(img)">
             <span class="text-lg">📷</span>
-            <span class="text-sm font-medium" :class="img.timeframe==='H4'?'text-blue-400':img.timeframe==='M15'?'text-purple-400':'text-yellow-400'">{{ img.timeframe }}</span>
+            <span class="text-sm font-medium" :class="img.timeframe==='H4'?'text-blue-400':img.timeframe==='M15'?'text-purple-400':'text-yellow-400'">{{ img.timeframe === 'H4' ? TF.h4 : img.timeframe === 'M15' ? TF.m15 : TF.m1 }}</span>
           </div>
         </div>
       </div>
@@ -138,11 +138,13 @@ import AppLayout     from '../components/AppLayout.vue'
 import RulesToggle   from '../components/RulesToggle.vue'
 import ImageUploader from '../components/ImageUploader.vue'
 import ImageLightbox from '../components/ImageLightbox.vue'
+import { TF }        from '@/timeframes.js'
 export default {
   name: 'JournalDetailView',
   components: { AppLayout, RulesToggle, ImageUploader, ImageLightbox },
   data() {
     return {
+      TF,
       journal: null,
       completeForm: { result:'', followed_rules: null, post_trade_notes:'', pips_result:'', r_multiple:'', mistakes:'', promote: false },
       postImages: {},
