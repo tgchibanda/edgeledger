@@ -12,6 +12,26 @@ use Illuminate\Http\Request;
 
 class AdminSubscriptionController extends Controller
 {
+    // Quick count for nav badge
+    public function pendingCount()
+    {
+        $count = Subscription::where('status', 'pending')->count();
+        return response()->json(['count' => $count]);
+    }
+
+    // Serve payment proof image to admin
+    public function serveProof(Request $request, \App\Models\Payment $payment)
+    {
+        if (!$payment->proof_path) {
+            abort(404);
+        }
+        $path = storage_path('app/' . $payment->proof_path);
+        if (!file_exists($path)) {
+            abort(404);
+        }
+        return response()->file($path);
+    }
+
     // Get/update the subscription plan price
     public function getPlan()
     {
@@ -41,31 +61,68 @@ class AdminSubscriptionController extends Controller
     // All subscriptions with user info
     public function subscriptions(Request $request)
     {
-        $subs = Subscription::with(['user','plan'])
+        $subs = Subscription::with(['user', 'plan', 'payments' => function($q) {
+                $q->latest()->limit(1);
+            }])
+            ->whereIn('status', ['active','pending','cancelled'])
             ->latest()
-            ->paginate(30);
+            ->paginate(50);
         return response()->json($subs);
     }
 
-    // Manually activate a subscription (admin records cash/manual payment)
+    // Manually activate a subscription (admin approves payment or records cash)
     public function activateSubscription(Request $request, User $user)
     {
         $data = $request->validate([
-            'payment_method' => 'required|string',
+            'payment_method' => 'nullable|string',
             'payment_ref'    => 'nullable|string',
             'months'         => 'nullable|integer|min:1|max:12',
         ]);
         $months = $data['months'] ?? 1;
         $plan   = SubscriptionPlan::where('is_active', true)->firstOrFail();
+        $now    = now();
 
-        $user->subscriptions()->where('status','active')->update(['status'=>'cancelled','cancelled_at'=>now()]);
+        // Check if there's already a pending subscription to activate
+        $pendingSub = $user->subscriptions()->where('status', 'pending')->latest()->first();
 
-        $now = now();
+        if ($pendingSub) {
+            // Activate the pending subscription
+            $pendingSub->update([
+                'status'               => 'active',
+                'current_period_start' => $now,
+                'current_period_end'   => $now->copy()->addMonths($months),
+                'external_id'          => $data['payment_ref'] ?? $pendingSub->external_id,
+            ]);
+
+            // Update the associated pending payment to completed
+            $pendingSub->payments()->where('status', 'pending')->update([
+                'status'  => 'completed',
+                'paid_at' => $now,
+            ]);
+
+            $payment = $pendingSub->payments()->latest()->first();
+            if ($payment) {
+                $this->creditReferralCommission($user, $payment, $plan->price);
+            }
+
+            return response()->json([
+                'message'      => "Subscription activated for {$user->name}.",
+                'subscription' => $pendingSub->fresh('plan'),
+            ]);
+        }
+
+        // No pending sub — create a fresh one (admin manually adding)
+        // Cancel any existing active subscriptions first
+        $user->subscriptions()->where('status', 'active')->update([
+            'status'       => 'cancelled',
+            'cancelled_at' => $now,
+        ]);
+
         $sub = Subscription::create([
             'user_id'              => $user->id,
             'plan_id'              => $plan->id,
             'status'               => 'active',
-            'payment_method'       => $data['payment_method'],
+            'payment_method'       => $data['payment_method'] ?? 'manual',
             'external_id'          => $data['payment_ref'] ?? null,
             'amount'               => $plan->price * $months,
             'currency'             => $plan->currency,
@@ -74,18 +131,42 @@ class AdminSubscriptionController extends Controller
             'current_period_end'   => $now->copy()->addMonths($months),
         ]);
 
-        Payment::create([
+        $payment = Payment::create([
             'user_id'         => $user->id,
             'subscription_id' => $sub->id,
             'amount'          => $plan->price * $months,
             'currency'        => $plan->currency,
             'status'          => 'completed',
-            'payment_method'  => $data['payment_method'],
+            'payment_method'  => $data['payment_method'] ?? 'manual',
             'external_id'     => $data['payment_ref'] ?? null,
             'paid_at'         => $now,
         ]);
 
-        return response()->json(['message' => "Subscription activated for {$user->name}.", 'subscription' => $sub->load('plan')]);
+        $this->creditReferralCommission($user, $payment, $plan->price * $months);
+
+        return response()->json([
+            'message'      => "Subscription activated for {$user->name}.",
+            'subscription' => $sub->load('plan'),
+        ]);
+    }
+
+    private function creditReferralCommission(User $user, Payment $payment, float $amount): void
+    {
+        if (!$user->referred_by) return;
+        $referral = \App\Models\Referral::where('referrer_id', $user->referred_by)
+                                         ->where('referee_id', $user->id)->first();
+        if (!$referral) return;
+        $commission = round($amount * ($referral->commission_pct / 100), 2);
+        \App\Models\ReferralEarning::create([
+            'user_id'      => $user->referred_by,
+            'payment_id'   => $payment->id,
+            'referral_id'  => $referral->id,
+            'amount'       => $commission,
+            'status'       => 'available',
+            'available_at' => now(),
+        ]);
+        $referral->increment('earned', $commission);
+        $payment->update(['commission_amount' => $commission]);
     }
 
     // All redemption requests
@@ -120,6 +201,7 @@ class AdminSubscriptionController extends Controller
             'total_revenue'       => Payment::where('status','completed')->sum('amount'),
             'total_commission'    => Payment::where('status','completed')->sum('commission_amount'),
             'active_subscribers'  => Subscription::where('status','active')->count(),
+            'pending_activations' => Subscription::where('status','pending')->count(),
             'total_subscribers'   => Subscription::distinct('user_id')->count('user_id'),
             'pending_redemptions' => Redemption::where('status','pending')->sum('amount'),
             'monthly_revenue'     => Payment::where('status','completed')

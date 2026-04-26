@@ -32,24 +32,23 @@ export default new Vuex.Store({
                     localStorage.removeItem('el_token')
                     localStorage.removeItem('el_user')
                 },
-                // Called on app boot to verify token is still valid
+                // Called on app boot and periodically to keep user state fresh
                 async verify({ commit, state }) {
                     if (!state.token) return false
                     try {
                         const { data } = await Vue.prototype.$http.get('/user')
                         commit('SET_USER', data)
+                        // Persist fresh user (with has_access, subscription etc) to localStorage
+                        localStorage.setItem('el_user', JSON.stringify(data))
                         return true
                     } catch(e) {
                         const status = e?.response?.status
-                        // Only clear token on 401 Unauthorized — not on 500 server errors
                         if (status === 401) {
                             commit('CLEAR')
                             localStorage.removeItem('el_token')
                             localStorage.removeItem('el_user')
                             return false
                         }
-                        // For other errors (network, 500) keep the user logged in
-                        // They have a valid token, something else went wrong
                         return true
                     }
                 },

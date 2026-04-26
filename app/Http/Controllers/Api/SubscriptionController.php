@@ -16,7 +16,14 @@ class SubscriptionController extends Controller
     public function plan(Request $request)
     {
         $plan = SubscriptionPlan::where('is_active', true)->first();
-        $sub  = $request->user()->subscriptions()->with('plan')->latest()->first();
+        $user = $request->user();
+
+        // Get most recent subscription (active or pending)
+        $sub = $user->subscriptions()
+            ->whereIn('status', ['active','pending','cancelled'])
+            ->with('plan')
+            ->latest()
+            ->first();
 
         return response()->json([
             'plan'         => $plan,
@@ -26,26 +33,34 @@ class SubscriptionController extends Controller
         ]);
     }
 
-    // Manual payment confirmation (admin records payment)
-    // In production this would be replaced with Stripe webhook
+    // Manual payment submission — sets pending until admin approves
     public function subscribe(Request $request)
     {
         $data = $request->validate([
             'payment_method' => 'required|string',
-            'payment_ref'    => 'nullable|string', // payment reference/transaction ID
+            'payment_ref'    => 'nullable|string',
+            'screenshot'     => 'nullable|file|image|max:5120',
         ]);
 
         $plan = SubscriptionPlan::where('is_active', true)->firstOrFail();
         $user = $request->user();
 
-        // Cancel any existing active subscription first
-        $user->subscriptions()->where('status','active')->update(['status'=>'cancelled','cancelled_at'=>now()]);
+        // Handle screenshot — store separately
+        $screenshotPath = null;
+        if ($request->hasFile('screenshot')) {
+            $screenshotPath = $request->file('screenshot')->store('payment_proofs', 'local');
+        }
 
         $now = Carbon::now();
+
+        // Cancel any existing pending submission first
+        $user->subscriptions()->where('status', 'pending')->delete();
+
+        // Create subscription in pending state — admin activates it
         $sub = Subscription::create([
             'user_id'              => $user->id,
             'plan_id'              => $plan->id,
-            'status'               => 'active',
+            'status'               => 'pending',
             'payment_method'       => $data['payment_method'],
             'external_id'          => $data['payment_ref'] ?? null,
             'amount'               => $plan->price,
@@ -55,23 +70,21 @@ class SubscriptionController extends Controller
             'current_period_end'   => $now->copy()->addMonth(),
         ]);
 
-        // Record payment
-        $payment = Payment::create([
+        // Record pending payment — proof_path stored separately
+        Payment::create([
             'user_id'         => $user->id,
             'subscription_id' => $sub->id,
             'amount'          => $plan->price,
             'currency'        => $plan->currency,
-            'status'          => 'completed',
+            'status'          => 'pending',
             'payment_method'  => $data['payment_method'],
             'external_id'     => $data['payment_ref'] ?? null,
+            'proof_path'      => $screenshotPath,
             'paid_at'         => $now,
         ]);
 
-        // Credit referral commission if this user was referred
-        $this->creditReferralCommission($user, $payment, $plan->price);
-
         return response()->json([
-            'message'      => 'Subscription activated.',
+            'message'      => 'Payment submitted. Your subscription will be activated once we confirm your payment.',
             'subscription' => $sub->load('plan'),
         ], 201);
     }
