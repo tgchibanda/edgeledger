@@ -55,7 +55,7 @@
           <router-link v-for="item in freeItems" :key="item.to"
             :to="item.to" custom v-slot="{ isActive, navigate }">
             <div :class="['nav-item', isActive ? 'nav-item--active' : '']"
-              @click="navigate(); mobileOpen=false">
+              @click="navigate($event); mobileOpen=false">
               <span class="nav-item__icon">{{ item.icon }}</span>
               <span class="nav-item__label">{{ item.label }}</span>
             </div>
@@ -63,24 +63,26 @@
 
           <!-- Locked items — require active access -->
           <div class="nav-section-label">Trading Tools</div>
-          <template v-for="item in lockedItems" :key="item.to">
+          <div v-for="item in lockedItems" :key="item.to">
             <!-- Has access — show normally -->
             <router-link v-if="hasAccess" :to="item.to" custom v-slot="{ isActive, navigate }">
               <div :class="['nav-item', isActive ? 'nav-item--active' : '']"
-                @click="navigate(); mobileOpen=false">
+                @click="navigate($event); mobileOpen=false">
                 <span class="nav-item__icon">{{ item.icon }}</span>
                 <span class="nav-item__label">{{ item.label }}</span>
               </div>
             </router-link>
             <!-- No access — show locked -->
             <router-link v-else to="/subscription" custom v-slot="{ navigate }">
-              <div class="nav-item nav-item--locked" @click="navigate(); mobileOpen=false" :title="'Subscribe to access ' + item.label">
+              <div class="nav-item nav-item--locked"
+                @click="navigate($event); mobileOpen=false"
+                :title="'Subscribe to access ' + item.label">
                 <span class="nav-item__icon">{{ item.icon }}</span>
                 <span class="nav-item__label">{{ item.label }}</span>
                 <span class="nav-item__lock">🔒</span>
               </div>
             </router-link>
-          </template>
+          </div>
 
           <div class="nav-divider"></div>
 
@@ -88,7 +90,7 @@
           <router-link v-for="item in accountItems" :key="item.to"
             :to="item.to" custom v-slot="{ isActive, navigate }">
             <div :class="['nav-item', isActive ? 'nav-item--active' : '']"
-              @click="navigate(); mobileOpen=false">
+              @click="navigate($event); mobileOpen=false">
               <span class="nav-item__icon">{{ item.icon }}</span>
               <span class="nav-item__label">{{ item.label }}</span>
             </div>
@@ -98,13 +100,13 @@
           <template v-if="isSuperuser">
             <div class="nav-section-label">Admin</div>
             <router-link to="/admin/users" custom v-slot="{ isActive, navigate }">
-              <div :class="['nav-item', isActive ? 'nav-item--active' : '']" @click="navigate(); mobileOpen=false">
+              <div :class="['nav-item', isActive ? 'nav-item--active' : '']" @click="navigate($event); mobileOpen=false">
                 <span class="nav-item__icon">👥</span>
                 <span class="nav-item__label">User Management</span>
               </div>
             </router-link>
             <router-link to="/admin/revenue" custom v-slot="{ isActive, navigate }">
-              <div :class="['nav-item', isActive ? 'nav-item--active' : '']" @click="navigate(); mobileOpen=false">
+              <div :class="['nav-item', isActive ? 'nav-item--active' : '']" @click="navigate($event); mobileOpen=false">
                 <span class="nav-item__icon">💰</span>
                 <span class="nav-item__label">Revenue</span>
               </div>
