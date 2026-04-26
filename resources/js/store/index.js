@@ -40,11 +40,17 @@ export default new Vuex.Store({
                         commit('SET_USER', data)
                         return true
                     } catch(e) {
-                        // Token expired or invalid — clear it
-                        commit('CLEAR')
-                        localStorage.removeItem('el_token')
-                        localStorage.removeItem('el_user')
-                        return false
+                        const status = e?.response?.status
+                        // Only clear token on 401 Unauthorized — not on 500 server errors
+                        if (status === 401) {
+                            commit('CLEAR')
+                            localStorage.removeItem('el_token')
+                            localStorage.removeItem('el_user')
+                            return false
+                        }
+                        // For other errors (network, 500) keep the user logged in
+                        // They have a valid token, something else went wrong
+                        return true
                     }
                 },
             },

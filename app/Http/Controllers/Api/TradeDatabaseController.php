@@ -22,41 +22,40 @@ class TradeDatabaseController extends Controller
     }
 
     public function store(Request $request)
-{
-    $data = $request->validate([
-        'h4_category_id'     => 'required|exists:categories,id',
-        'm15_category_id'    => 'required|exists:categories,id',
-        'm1_category_id'     => 'required|exists:categories,id',
-        'pair_id'            => 'required|exists:pairs,id',
-        'trading_session_id' => 'required|exists:trading_sessions,id',
-        'entry_technique'    => 'required|string|max:100',
-        'result'             => 'required|in:win,loss,breakeven',
-        'followed_rules'     => 'required',
-        'pips_result'        => 'nullable|numeric',
-        'r_multiple'         => 'nullable|numeric',
-        'confluences'        => 'nullable|string|max:500',
-        'mistakes'           => 'nullable|string|max:500',
-        'notes'              => 'nullable|string',
-        'trade_date'         => 'nullable|date',
-    ]);
-
-    // Convert string boolean from FormData to integer
-    $data['followed_rules'] = filter_var($data['followed_rules'], FILTER_VALIDATE_BOOLEAN) ? 1 : 0;
-    $data['user_id'] = $request->user()->id;
-
-    $trade = TradeDatabase::create($data);
-    $this->handleImages($request, $trade->id, 'trade_database', TradeImage::class, 'trade_database_id');
-    return response()->json($trade->load($this->rels()), 201);
-}
-
-    public function show(Request $request, TradeDatabase $trade)
     {
+        $data = $request->validate([
+            'h4_category_id'     => 'required|exists:categories,id',
+            'm15_category_id'    => 'required|exists:categories,id',
+            'm1_category_id'     => 'required|exists:categories,id',
+            'pair_id'            => 'required|exists:pairs,id',
+            'trading_session_id' => 'required|exists:trading_sessions,id',
+            'entry_technique'    => 'required|string|max:100',
+            'result'             => 'required|in:win,loss,breakeven',
+            'followed_rules'     => 'required|boolean',
+            'pips_result'        => 'nullable|numeric',
+            'r_multiple'         => 'nullable|numeric',
+            'confluences'        => 'nullable|string|max:500',
+            'mistakes'           => 'nullable|string|max:500',
+            'notes'              => 'nullable|string',
+            'trade_date'         => 'nullable|date',
+        ]);
+        $data['user_id'] = $request->user()->id;
+        $trade = TradeDatabase::create($data);
+        $this->handleImages($request, $trade->id, 'trade_database', TradeImage::class, 'trade_database_id');
+        return response()->json($trade->load($this->rels()), 201);
+    }
+
+    // Explicit route model binding — handles the trade-database → trade_database naming
+    public function show(Request $request, $tradeDatabase)
+    {
+        $trade = \App\Models\TradeDatabase::findOrFail($tradeDatabase);
         $this->gate($request, $trade);
         return response()->json($trade->load($this->rels()));
     }
 
-    public function update(Request $request, TradeDatabase $trade)
+    public function update(Request $request, $tradeDatabase)
     {
+        $trade = \App\Models\TradeDatabase::findOrFail($tradeDatabase);
         $this->gate($request, $trade);
         $data = $request->validate([
             'h4_category_id'     => 'sometimes|exists:categories,id',
@@ -79,8 +78,9 @@ class TradeDatabaseController extends Controller
         return response()->json($trade->load($this->rels()));
     }
 
-    public function destroy(Request $request, TradeDatabase $trade)
+    public function destroy(Request $request, $tradeDatabase)
     {
+        $trade = \App\Models\TradeDatabase::findOrFail($tradeDatabase);
         $this->gate($request, $trade);
         foreach ($trade->images as $img) Storage::disk('local')->delete($img->path);
         $trade->delete();
@@ -145,8 +145,9 @@ class TradeDatabaseController extends Controller
         ]);
     }
 
-    public function promote(Request $request, TradeDatabase $trade)
+    public function promote(Request $request, $tradeDatabase)
     {
+        $trade = \App\Models\TradeDatabase::findOrFail($tradeDatabase);
         $this->gate($request, $trade);
         $trade->update(['is_reference' => !$trade->is_reference]);
         return response()->json($trade->load($this->rels()));
@@ -164,6 +165,7 @@ class TradeDatabaseController extends Controller
 
     private function gate($request, $trade): void
     {
-        if ($trade->user_id !== $request->user()->id) abort(403);
+        // Use loose comparison (==) to avoid int/string type mismatch
+        if ((int)$trade->user_id !== (int)$request->user()->id) abort(403);
     }
 }

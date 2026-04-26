@@ -7,7 +7,10 @@
         <span class="el-logo-mark">EL</span>
         <span class="el-logo-text">EdgeLedger</span>
       </div>
-      <button class="el-nav__cta" @click="showLogin = true">Trader Login</button>
+      <div class="el-nav__actions">
+        <button class="el-nav__cta el-nav__cta--ghost" @click="openModal('login')">Sign In</button>
+        <button class="el-nav__cta el-nav__cta--primary" @click="openModal('register')">Start Free Trial</button>
+      </div>
     </nav>
 
     <!-- ── HERO ── -->
@@ -26,8 +29,8 @@
           and let the bot watch the charts while you focus on execution.
         </p>
         <div class="el-hero__actions">
-          <a href="mailto:tamaeproductions@gmail.com?subject=EdgeLedger Access Request" class="el-btn-primary">
-            Request Access
+          <a href="mailto:tamaeproductions@gmail.com?subject=EdgeLedger Support Request" class="el-btn-primary">
+            Support Request
           </a>
           <button class="el-btn-ghost" @click="scrollTo('features')">See How It Works</button>
         </div>
@@ -236,12 +239,12 @@
     <!-- ── CTA ── -->
     <section class="el-cta">
       <div class="el-cta__glow"></div>
-      <h2 class="el-cta__title">Ready to trade with an edge?</h2>
-      <p class="el-cta__sub">EdgeLedger is currently available by invitation. Send an access request and we will be in touch.</p>
-      <a href="mailto:tamaeproductions@gmail.com?subject=EdgeLedger Access Request&body=Hi, I would like to request access to EdgeLedger. My trading style is:" class="el-btn-primary el-btn-primary--lg">
-        Request Access — tamaeproductions@gmail.com
-      </a>
-      <div class="el-cta__note">Already have an account? <button class="el-link" @click="showLogin = true">Sign in here</button></div>
+      <h2 class="el-cta__title">Start trading smarter today</h2>
+      <p class="el-cta__sub">Create your free account and get <strong style="color:#1D9E75">30 days free</strong>. No credit card required.</p>
+      <button class="el-btn-primary el-btn-primary--lg" @click="openModal('register')">
+        Get Started Free — 30 Day Trial
+      </button>
+      <div class="el-cta__note">Already have an account? <button class="el-link" @click="openModal('login')">Sign in here</button></div>
     </section>
 
     <!-- ── FOOTER ── -->
@@ -250,17 +253,24 @@
       <span class="el-footer__text">EdgeLedger Trading Intelligence · Built for structured traders</span>
     </footer>
 
-    <!-- ── LOGIN MODAL ── -->
+    <!-- ── AUTH MODAL ── -->
     <transition name="el-modal-fade">
-      <div v-if="showLogin" class="el-modal-overlay" @click.self="showLogin = false">
+      <div v-if="showModal" class="el-modal-overlay" @click.self="showModal = false">
         <div class="el-modal">
-          <button class="el-modal__close" @click="showLogin = false">✕</button>
+          <button class="el-modal__close" @click="showModal = false">✕</button>
           <div class="el-modal__logo">
             <span class="el-logo-mark">EL</span>
             <span class="el-logo-text">EdgeLedger</span>
           </div>
-          <h2 class="el-modal__title">Sign in to your account</h2>
-          <form @submit.prevent="login" class="el-modal__form">
+
+          <!-- Tabs -->
+          <div class="el-modal__tabs">
+            <button :class="['el-modal__tab', mode==='login'?'active':'']" @click="mode='login'; error=''">Sign In</button>
+            <button :class="['el-modal__tab', mode==='register'?'active':'']" @click="mode='register'; error=''">Create Account</button>
+          </div>
+
+          <!-- LOGIN -->
+          <form v-if="mode==='login'" @submit.prevent="login" class="el-modal__form">
             <div class="el-field">
               <label class="el-label">Email</label>
               <input v-model="form.email" type="email" class="el-input" placeholder="you@example.com" required autocomplete="username" />
@@ -273,10 +283,49 @@
             <button type="submit" class="el-modal__btn" :disabled="loading">
               {{ loading ? 'Signing in…' : 'Sign In' }}
             </button>
-            <div class="el-modal__access">
-              Don't have access? <a href="mailto:tamaeproductions@gmail.com?subject=EdgeLedger Access Request">Request it here</a>
+            <div class="el-modal__switch">
+              No account yet? <button type="button" class="el-link" @click="mode='register'; error=''">Create one free</button>
             </div>
           </form>
+
+          <!-- REGISTER -->
+          <form v-if="mode==='register'" @submit.prevent="register" class="el-modal__form">
+            <div class="el-modal__trial-badge">
+              🎉 30 days free · No credit card required
+            </div>
+            <div class="el-field">
+              <label class="el-label">Full Name</label>
+              <input v-model="regForm.name" type="text" class="el-input" placeholder="Your name" required />
+            </div>
+            <div class="el-field">
+              <label class="el-label">Email</label>
+              <input v-model="regForm.email" type="email" class="el-input" placeholder="you@example.com" required autocomplete="email" />
+            </div>
+            <div class="el-field">
+              <label class="el-label">Password</label>
+              <input v-model="regForm.password" type="password" class="el-input" placeholder="Min 8 characters" required autocomplete="new-password" />
+            </div>
+            <div class="el-field">
+              <label class="el-label">Confirm Password</label>
+              <input v-model="regForm.password_confirmation" type="password" class="el-input" placeholder="Repeat password" required autocomplete="new-password" />
+            </div>
+            <div class="el-field">
+              <label class="el-label">Referral Code <span style="color:#4A5568;font-weight:400">(optional)</span></label>
+              <input v-model="regForm.referral_code" type="text" class="el-input" placeholder="Enter code if you have one" autocomplete="off" />
+            </div>
+            <div v-if="error" class="el-modal__error">{{ error }}</div>
+            <button type="submit" class="el-modal__btn" :disabled="loading">
+              {{ loading ? 'Creating account…' : 'Start 30-Day Free Trial' }}
+            </button>
+            <div class="el-modal__terms">
+              By registering you agree to our terms. After your free trial, EdgeLedger Pro is just
+              <strong style="color:#1D9E75">$2/month</strong> — cancel anytime.
+            </div>
+            <div class="el-modal__switch">
+              Already have an account? <button type="button" class="el-link" @click="mode='login'; error=''">Sign in</button>
+            </div>
+          </form>
+
         </div>
       </div>
     </transition>
@@ -289,15 +338,30 @@ export default {
   name: 'LoginView',
   data() {
     return {
-      showLogin: false,
-      loading: false,
-      error: '',
+      showModal: false,
+      mode:      'login',  // 'login' | 'register'
+      loading:   false,
+      error:     '',
       form: { email: '', password: '' },
+      regForm: { name: '', email: '', password: '', password_confirmation: '', referral_code: '' },
+    }
+  },
+  mounted() {
+    // Auto-open register modal if ?ref= is in URL (referral link)
+    const ref = new URLSearchParams(window.location.search).get('ref')
+    if (ref) {
+      this.regForm.referral_code = ref
+      this.openModal('register')
     }
   },
   methods: {
     scrollTo(id) {
       document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
+    },
+    openModal(mode) {
+      this.mode      = mode
+      this.showModal = true
+      this.error     = ''
     },
     async login() {
       this.loading = true
@@ -307,6 +371,26 @@ export default {
         this.$router.push('/')
       } catch(e) {
         this.error = e.response?.data?.message || 'Invalid credentials.'
+      } finally { this.loading = false }
+    },
+    async register() {
+      this.loading = true
+      this.error   = ''
+      try {
+        const { data } = await this.$http.post('/register', this.regForm)
+        // Store token and user just like login
+        this.$store.commit('auth/SET_TOKEN', data.token)
+        this.$store.commit('auth/SET_USER',  data.user)
+        localStorage.setItem('el_token', data.token)
+        localStorage.setItem('el_user',  JSON.stringify(data.user))
+        this.$router.push('/')
+      } catch(e) {
+        const errs = e.response?.data?.errors
+        if (errs) {
+          this.error = Object.values(errs).flat().join(' ')
+        } else {
+          this.error = e.response?.data?.message || 'Registration failed.'
+        }
       } finally { this.loading = false }
     },
   },
@@ -344,12 +428,11 @@ export default {
   font-family: 'Syne', sans-serif; font-weight: 800; font-size: 13px; color: #fff;
 }
 .el-logo-text { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 18px; color: #fff; letter-spacing: -0.3px; }
-.el-nav__cta {
-  background: transparent; border: 1px solid rgba(29,158,117,0.5); color: #1D9E75;
-  padding: 8px 20px; border-radius: 8px; font-family: 'DM Sans', sans-serif;
-  font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s;
-}
-.el-nav__cta:hover { background: rgba(29,158,117,0.1); border-color: #1D9E75; }
+.el-nav__cta { padding:8px 18px; border-radius:8px; font-family:'DM Sans',sans-serif; font-size:14px; font-weight:500; cursor:pointer; transition:all 0.2s; }
+.el-nav__cta--ghost { background:transparent; border:1px solid rgba(255,255,255,.15); color:#94A3B8; }
+.el-nav__cta--ghost:hover { border-color:rgba(255,255,255,.3); color:#fff; }
+.el-nav__cta--primary { background:linear-gradient(135deg,#1D9E75,#0F6E56); color:#fff; border:none; box-shadow:0 2px 12px rgba(29,158,117,.3); }
+.el-nav__cta--primary:hover { transform:translateY(-1px); }
 
 /* ── HERO ── */
 .el-hero {
@@ -596,8 +679,16 @@ export default {
 }
 .el-modal__close:hover { background: rgba(255,255,255,0.12); }
 .el-modal__logo { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; }
-.el-modal__title { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 24px; }
-.el-modal__form { display: flex; flex-direction: column; gap: 16px; }
+.el-modal__title  { font-family:'Syne',sans-serif; font-size:22px; font-weight:700; color:#fff; margin-bottom:16px; }
+.el-modal__tabs   { display:flex; gap:0; margin-bottom:20px; background:#0F1923; border-radius:8px; padding:3px; }
+.el-modal__tab    { flex:1; padding:8px; border-radius:6px; background:transparent; border:none; color:#64748B; font-family:'DM Sans',sans-serif; font-size:14px; font-weight:500; cursor:pointer; transition:all .15s; }
+.el-modal__tab.active { background:#1A2633; color:#fff; }
+.el-modal__trial-badge { background:rgba(29,158,117,.1); border:1px solid rgba(29,158,117,.3); border-radius:8px; padding:10px 14px; text-align:center; font-size:13px; color:#1D9E75; font-weight:600; margin-bottom:4px; }
+.el-modal__switch { font-size:13px; color:#4A5568; text-align:center; }
+.el-modal__terms  { font-size:11px; color:#334155; text-align:center; line-height:1.6; }
+.el-modal__access { font-size:13px; color:#4A5568; text-align:center; }
+.el-modal__access a { color:#1D9E75; text-decoration:none; }
+.el-modal__access a:hover { text-decoration:underline; }.el-modal__form { display: flex; flex-direction: column; gap: 16px; }
 .el-field { display: flex; flex-direction: column; gap: 6px; }
 .el-label { font-size: 13px; color: #64748B; font-weight: 500; }
 .el-input {
