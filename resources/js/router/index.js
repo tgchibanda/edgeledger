@@ -66,6 +66,12 @@ const routes = [
         meta: { auth: true }
     },
     {
+        path: '/invalid-trades',
+        name: 'invalid-trades',
+        component: () => import('../views/InvalidTradesView.vue'),
+        meta: { auth: true }
+    },
+    {
         path: '/categories',
         name: 'categories',
         component: () => import('../views/CategoriesView.vue'),
@@ -110,13 +116,11 @@ const router = new VueRouter({
     routes
 })
 
-// Track if we've verified the token this session
 let tokenVerified = false
 
 router.beforeEach(async (to, from, next) => {
     const token = store.state.auth.token
 
-    // On first navigation after a page reload, verify the token is still valid
     if (token && !tokenVerified) {
         tokenVerified = true
         await store.dispatch('auth/verify')
