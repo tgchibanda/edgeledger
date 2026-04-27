@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\ImageController;
 use App\Http\Controllers\Api\SubscriptionController;
 use App\Http\Controllers\Api\ReferralController;
 use App\Http\Controllers\Api\AdminSubscriptionController;
+use App\Http\Controllers\Api\InvalidTradeController;
 
 // Public
 Route::post('/login',    [AuthController::class, 'login']);
@@ -58,6 +59,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('referral/stats',              [ReferralController::class, 'stats']);
     Route::post('referral/redeem',            [ReferralController::class, 'redeem']);
     Route::get('referral/redemptions',        [ReferralController::class, 'redemptionHistory']);
+
+    // Invalid trades (pattern tracking)
+    Route::apiResource('invalid-trades', InvalidTradeController::class);
 
     // Superuser — users + subscription admin
     Route::middleware('superuser')->group(function () {
