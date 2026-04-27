@@ -49,7 +49,7 @@
                   'bg-purple-900/60 text-purple-300': img.timeframe === 'M15',
                   'bg-yellow-900/60 text-yellow-300': img.timeframe === 'M1',
                 }">
-                {{ img.timeframe === 'H4' ? TF.h4 : img.timeframe === 'M15' ? TF.m15 : TF.m1 }}
+                {{ img._label || (img.timeframe === 'H4' ? TF.h4 : img.timeframe === 'M15' ? TF.m15 : TF.m1) }}
               </span>
             </div>
             <div class="flex-1 rounded-xl overflow-hidden bg-gray-900 flex items-center justify-center min-h-0 transition-all"
@@ -57,7 +57,7 @@
               <img v-if="img.path" :src="`/api/images/${img.path}`" class="w-full h-full object-contain" />
               <div v-else class="text-center text-gray-600 p-4">
                 <div class="text-3xl mb-2">📷</div>
-                <div class="text-xs">No {{ img.timeframe === 'H4' ? TF.h4 : img.timeframe === 'M15' ? TF.m15 : TF.m1 }} image</div>
+                <div class="text-xs">No {{ img._label || (img.timeframe === 'H4' ? TF.h4 : img.timeframe === 'M15' ? TF.m15 : TF.m1) }} image</div>
               </div>
             </div>
           </div>

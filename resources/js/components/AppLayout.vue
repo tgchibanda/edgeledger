@@ -115,7 +115,60 @@
           </template>
         </nav>
 
-        <!-- User profile at bottom -->
+        <!-- ── TRADING RULES PANEL ── -->
+        <div class="rules-panel" :class="{ 'rules-panel--open': rulesOpen }">
+          <button class="rules-panel__toggle" @click="rulesOpen = !rulesOpen">
+            <span class="rules-panel__toggle-icon">📋</span>
+            <span class="rules-panel__toggle-label">Trading Rules</span>
+            <span class="rules-panel__count" v-if="rules.length">{{ rules.length }}</span>
+            <svg class="rules-panel__chevron" :class="{ rotated: rulesOpen }" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+
+          <div v-if="rulesOpen" class="rules-panel__body">
+            <!-- Rules list -->
+            <div v-if="rules.length" class="rules-list">
+              <div v-for="(rule, i) in rules" :key="rule.id || i" class="rule-item" :class="{ 'rule-item--editing': editingRule === i }">
+                <template v-if="editingRule === i">
+                  <input
+                    :ref="'ruleInput_' + i"
+                    v-model="rules[i].content"
+                    class="rule-input"
+                    @blur="saveEdit(i)"
+                    @keydown.enter="saveEdit(i)"
+                    @keydown.esc="editingRule = -1"
+                  />
+                </template>
+                <template v-else>
+                  <span class="rule-num">{{ i + 1 }}</span>
+                  <span class="rule-text" @dblclick="startEdit(i)">{{ rule.content }}</span>
+                  <button class="rule-del" @click="deleteRule(i)" title="Delete rule">✕</button>
+                </template>
+              </div>
+            </div>
+
+            <div v-else class="rules-empty">No rules yet. Add your checklist below.</div>
+
+            <!-- Add new rule -->
+            <div class="rules-add">
+              <input
+                v-model="newRule"
+                class="rule-new-input"
+                placeholder="Add a rule or note…"
+                @keydown.enter="addRule"
+                maxlength="120"
+                :disabled="rulesSaving"
+              />
+              <button class="rule-add-btn" @click="addRule" :disabled="!newRule.trim() || rulesSaving" title="Add rule">
+                <svg v-if="!rulesSaving" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+              </button>
+            </div>
+
+            <div class="rules-hint">Double-click any rule to edit</div>
+          </div>
+        </div>
+
+        <!-- User profile -->
         <div class="sidebar__user">
           <div class="user-avatar">{{ initials }}</div>
           <div class="user-info">
@@ -155,9 +208,14 @@ export default {
   name: 'AppLayout',
   data() {
     return {
-      mobileOpen:    false,
+      mobileOpen:      false,
       pendingSubCount: 0,
-      pollTimer:     null,
+      pollTimer:       null,
+      rulesOpen:       true,
+      rules:           [],   // [{ id, content, sort_order }]
+      newRule:         '',
+      editingRule:     -1,
+      rulesSaving:     false,
     }
   },
   computed: {
@@ -230,8 +288,15 @@ export default {
     },
   },
   async mounted() {
-    // Refresh user state immediately on mount to pick up any admin changes
+    // Load panel open state from localStorage (UI pref only, not data)
+    const openState = localStorage.getItem('el_rules_open')
+    if (openState !== null) this.rulesOpen = openState === 'true'
+
+    // Refresh user state
     await this.$store.dispatch('auth/verify')
+
+    // Load trading rules from database
+    this.loadRules()
 
     if (this.isSuperuser) {
       await this.fetchPendingCount()
@@ -248,8 +313,62 @@ export default {
     '$route'() {
       if (this.isSuperuser) this.fetchPendingCount()
     },
+    rulesOpen(v) {
+      localStorage.setItem('el_rules_open', String(v))
+    },
   },
   methods: {
+    // ── Trading rules ─────────────────────────────────────────────
+    async loadRules() {
+      try {
+        const { data } = await this.$http.get('/trading-rules')
+        this.rules = data  // [{ id, content, sort_order }]
+      } catch(e) {}
+    },
+
+    async addRule() {
+      const text = this.newRule.trim()
+      if (!text) return
+      this.rulesSaving = true
+      try {
+        const { data } = await this.$http.post('/trading-rules', { content: text })
+        this.rules.push(data)
+        this.newRule = ''
+      } catch(e) {}
+      finally { this.rulesSaving = false }
+    },
+
+    async deleteRule(i) {
+      const rule = this.rules[i]
+      if (!rule) return
+      this.rules.splice(i, 1)
+      try {
+        await this.$http.delete(`/trading-rules/${rule.id}`)
+      } catch(e) {
+        // Re-add if delete failed
+        this.rules.splice(i, 0, rule)
+      }
+    },
+
+    startEdit(i) {
+      this.editingRule = i
+      this.$nextTick(() => {
+        const ref = this.$refs['ruleInput_' + i]
+        const el  = Array.isArray(ref) ? ref[0] : ref
+        if (el) el.focus()
+      })
+    },
+
+    async saveEdit(i) {
+      const rule = this.rules[i]
+      if (!rule || !rule.content?.trim()) return
+      this.editingRule = -1
+      try {
+        await this.$http.put(`/trading-rules/${rule.id}`, { content: rule.content })
+      } catch(e) {}
+    },
+
+    // ─────────────────────────────────────────────────────────────
     async fetchPendingCount() {
       if (!this.isSuperuser) return
       try {
@@ -390,6 +509,95 @@ export default {
   0%,100% { box-shadow: 0 0 0 0 rgba(226,75,74,.4); }
   50%      { box-shadow: 0 0 0 4px rgba(226,75,74,0); }
 }
+
+/* ── Trading Rules Panel ─────────────────────────────────────────── */
+.rules-panel {
+  border-top: 1px solid rgba(255,255,255,.06);
+  flex-shrink: 0;
+}
+.rules-panel__toggle {
+  width: 100%; display: flex; align-items: center; gap: 8px;
+  padding: 10px 12px; background: none; border: none; cursor: pointer;
+  color: #64748B; transition: color .15s;
+  text-align: left;
+}
+.rules-panel__toggle:hover { color: #94A3B8; }
+.rules-panel--open .rules-panel__toggle { color: #E2E8F0; }
+.rules-panel__toggle-icon  { font-size: 14px; flex-shrink: 0; }
+.rules-panel__toggle-label { font-size: 12px; font-weight: 600; letter-spacing: .3px; flex: 1; }
+.rules-panel__count {
+  font-size: 10px; font-weight: 700; background: rgba(29,158,117,.2);
+  color: #1D9E75; padding: 1px 6px; border-radius: 10px;
+}
+.rules-panel__chevron { flex-shrink: 0; transition: transform .2s; }
+.rules-panel__chevron.rotated { transform: rotate(180deg); }
+
+.rules-panel__body {
+  padding: 0 8px 8px;
+  display: flex; flex-direction: column; gap: 4px;
+  max-height: 280px; overflow-y: auto;
+}
+.rules-panel__body::-webkit-scrollbar { width: 3px; }
+.rules-panel__body::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 2px; }
+
+.rules-list { display: flex; flex-direction: column; gap: 2px; }
+.rule-item {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 6px; border-radius: 6px;
+  background: rgba(255,255,255,.02);
+  border: 1px solid transparent;
+  transition: background .15s;
+}
+.rule-item:hover { background: rgba(255,255,255,.05); }
+.rule-item:hover .rule-del { opacity: 1; }
+.rule-item--editing { background: rgba(29,158,117,.06); border-color: rgba(29,158,117,.2); }
+
+.rule-num {
+  font-size: 9px; font-weight: 700; color: #1D9E75;
+  background: rgba(29,158,117,.12); width: 16px; height: 16px;
+  border-radius: 4px; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.rule-text {
+  font-size: 11px; color: #94A3B8; flex: 1; line-height: 1.4;
+  cursor: text; word-break: break-word;
+}
+.rule-del {
+  background: none; border: none; color: #4A5568; cursor: pointer;
+  font-size: 10px; flex-shrink: 0; padding: 1px 3px; opacity: 0;
+  transition: all .15s; border-radius: 3px;
+}
+.rule-del:hover { color: #E24B4A; background: rgba(226,75,74,.1); }
+
+.rule-input {
+  flex: 1; background: transparent; border: none; outline: none;
+  color: #E2E8F0; font-size: 11px; padding: 0; font-family: inherit;
+  line-height: 1.4;
+}
+
+.rules-empty { font-size: 11px; color: #334155; padding: 6px 6px 2px; font-style: italic; }
+
+.rules-add {
+  display: flex; gap: 4px; margin-top: 4px;
+}
+.rule-new-input {
+  flex: 1; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
+  border-radius: 7px; padding: 6px 8px; color: #E2E8F0; font-size: 11px;
+  outline: none; transition: border-color .2s; font-family: inherit;
+}
+.rule-new-input:focus { border-color: rgba(29,158,117,.4); }
+.rule-new-input::placeholder { color: #334155; }
+.rule-add-btn {
+  width: 28px; height: 28px; border-radius: 7px; flex-shrink: 0;
+  background: rgba(29,158,117,.15); border: 1px solid rgba(29,158,117,.25);
+  color: #1D9E75; cursor: pointer; display: flex; align-items: center;
+  justify-content: center; transition: all .15s;
+}
+.rule-add-btn:hover:not(:disabled) { background: rgba(29,158,117,.25); }
+.rule-add-btn:disabled { opacity: .35; cursor: not-allowed; }
+
+.rules-hint { font-size: 9px; color: #1E293B; text-align: center; padding: 2px 0; }
+.spin { animation: spin .7s linear infinite; }
 
 /* ── User footer ─────────────────────────────────────────────────── */
 .sidebar__user {

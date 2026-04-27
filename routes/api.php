@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\SubscriptionController;
 use App\Http\Controllers\Api\ReferralController;
 use App\Http\Controllers\Api\AdminSubscriptionController;
 use App\Http\Controllers\Api\InvalidTradeController;
+use App\Http\Controllers\Api\TradingRuleController;
 
 // Public
 Route::post('/login',    [AuthController::class, 'login']);
@@ -62,6 +63,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Invalid trades (pattern tracking)
     Route::apiResource('invalid-trades', InvalidTradeController::class);
+
+    // Trading rules (sidebar checklist)
+    Route::get('trading-rules',           [TradingRuleController::class, 'index']);
+    Route::post('trading-rules',          [TradingRuleController::class, 'store']);
+    Route::put('trading-rules/{tradingRule}',    [TradingRuleController::class, 'update']);
+    Route::delete('trading-rules/{tradingRule}', [TradingRuleController::class, 'destroy']);
+    Route::post('trading-rules/reorder',  [TradingRuleController::class, 'reorder']);
 
     // Superuser — users + subscription admin
     Route::middleware('superuser')->group(function () {
