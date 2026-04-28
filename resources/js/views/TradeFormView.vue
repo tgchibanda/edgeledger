@@ -138,16 +138,18 @@
           </button>
           <router-link to="/database" class="btn-ghost">Cancel</router-link>
         </div>
+
       </form>
+
     </div>
   </AppLayout>
 </template>
 
 <script>
-import AppLayout           from '../components/AppLayout.vue'
-import RulesToggle         from '../components/RulesToggle.vue'
-import ImageUploader       from '../components/ImageUploader.vue'
-import { TF } from '@/timeframes.js'
+import AppLayout     from '../components/AppLayout.vue'
+import RulesToggle   from '../components/RulesToggle.vue'
+import ImageUploader from '../components/ImageUploader.vue'
+import { TF }        from '@/timeframes.js'
 
 export default {
   name: 'TradeFormView',
@@ -164,10 +166,9 @@ export default {
         confluences: '', mistakes: '', notes: '', trade_date: '',
       },
       images:         {},
-      existingImages: [],   // current images on the trade (for edit display)
+      existingImages: [],
       saving:         false,
       error:          '',
-      savedTradeId:   null,
     }
   },
   computed: {
@@ -177,11 +178,6 @@ export default {
     h4cats()   { return this.$store.state.app.categories.H4 },
     m15cats()  { return this.$store.state.app.categories.M15 },
     m1cats()   { return this.$store.state.app.categories.M1 },
-    trainingDirection() {
-      if (this.form.result === 'win')  return 'bullish'
-      if (this.form.result === 'loss') return 'bearish'
-      return 'neutral'
-    },
   },
 
   async created() {
@@ -229,7 +225,15 @@ export default {
       try {
         const fd = new FormData()
         Object.entries(this.form).forEach(([k, v]) => {
-          if (v !== '' && v !== null && v !== undefined) fd.append(k, v)
+          if (v !== '' && v !== null && v !== undefined) {
+            // FormData converts booleans to "true"/"false" strings which Laravel rejects
+            // Convert to 1/0 integers instead
+            if (typeof v === 'boolean') {
+              fd.append(k, v ? '1' : '0')
+            } else {
+              fd.append(k, v)
+            }
+          }
         })
         if (this.images.H4)  fd.append('h4_image',  this.images.H4)
         if (this.images.M15) fd.append('m15_image', this.images.M15)
@@ -242,11 +246,10 @@ export default {
           )
           this.$router.push('/database')
         } else {
-          const { data } = await this.$http.post('/trade-database', fd, {
+          await this.$http.post('/trade-database', fd, {
             headers: { 'Content-Type': 'multipart/form-data' }
           })
-          this.savedTradeId = data.id
-          window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
+          this.$router.push('/database')
         }
       } catch(e) {
         this.error = e.response?.data?.message || 'Failed to save trade.'
