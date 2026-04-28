@@ -31,7 +31,7 @@ class TradeDatabaseController extends Controller
             'trading_session_id' => 'required|exists:trading_sessions,id',
             'entry_technique'    => 'required|string|max:100',
             'result'             => 'required|in:win,loss,breakeven',
-            'followed_rules'     => 'required|boolean',
+            'followed_rules'     => 'required|in:0,1,true,false',
             'pips_result'        => 'nullable|numeric',
             'r_multiple'         => 'nullable|numeric',
             'confluences'        => 'nullable|string|max:500',
@@ -40,6 +40,10 @@ class TradeDatabaseController extends Controller
             'trade_date'         => 'nullable|date',
         ]);
         $data['user_id'] = $request->user()->id;
+        // Cast followed_rules to int (FormData sends "1"/"0" or "true"/"false")
+        if (isset($data['followed_rules'])) {
+            $data['followed_rules'] = filter_var($data['followed_rules'], FILTER_VALIDATE_BOOLEAN) ? 1 : 0;
+        }
         $trade = TradeDatabase::create($data);
         $this->handleImages($request, $trade->id, 'trade_database', TradeImage::class, 'trade_database_id');
         return response()->json($trade->load($this->rels()), 201);
@@ -65,7 +69,7 @@ class TradeDatabaseController extends Controller
             'trading_session_id' => 'sometimes|exists:trading_sessions,id',
             'entry_technique'    => 'sometimes|string|max:100',
             'result'             => 'sometimes|in:win,loss,breakeven',
-            'followed_rules'     => 'sometimes|boolean',
+            'followed_rules'     => 'sometimes|in:0,1,true,false',
             'is_reference'       => 'sometimes|boolean',
             'pips_result'        => 'nullable|numeric',
             'r_multiple'         => 'nullable|numeric',
@@ -74,6 +78,9 @@ class TradeDatabaseController extends Controller
             'notes'              => 'nullable|string',
             'trade_date'         => 'nullable|date',
         ]);
+        if (isset($data['followed_rules'])) {
+            $data['followed_rules'] = filter_var($data['followed_rules'], FILTER_VALIDATE_BOOLEAN) ? 1 : 0;
+        }
         $trade->update($data);
         return response()->json($trade->load($this->rels()));
     }
