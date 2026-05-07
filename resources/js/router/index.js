@@ -66,6 +66,12 @@ const routes = [
         meta: { auth: true }
     },
     {
+        path: '/backtest',
+        name: 'backtest',
+        component: () => import('../views/BacktestView.vue'),
+        meta: { auth: true }
+    },
+    {
         path: '/invalid-trades',
         name: 'invalid-trades',
         component: () => import('../views/InvalidTradesView.vue'),
