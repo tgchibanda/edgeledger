@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\ReferralController;
 use App\Http\Controllers\Api\AdminSubscriptionController;
 use App\Http\Controllers\Api\InvalidTradeController;
 use App\Http\Controllers\Api\TradingRuleController;
+use App\Http\Controllers\Api\BacktestController;
 
 // Public
 Route::post('/login',    [AuthController::class, 'login']);
@@ -57,21 +58,33 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('subscription/history', [SubscriptionController::class, 'history']);
 
     // Referral
-    Route::get('referral/stats',              [ReferralController::class, 'stats']);
-    Route::post('referral/redeem',            [ReferralController::class, 'redeem']);
-    Route::get('referral/redemptions',        [ReferralController::class, 'redemptionHistory']);
+    Route::get('referral/stats',       [ReferralController::class, 'stats']);
+    Route::post('referral/redeem',     [ReferralController::class, 'redeem']);
+    Route::get('referral/redemptions', [ReferralController::class, 'redemptionHistory']);
 
     // Invalid trades (pattern tracking)
     Route::apiResource('invalid-trades', InvalidTradeController::class);
 
     // Trading rules (sidebar checklist)
-    Route::get('trading-rules',           [TradingRuleController::class, 'index']);
-    Route::post('trading-rules',          [TradingRuleController::class, 'store']);
-    Route::put('trading-rules/{tradingRule}',    [TradingRuleController::class, 'update']);
-    Route::delete('trading-rules/{tradingRule}', [TradingRuleController::class, 'destroy']);
-    Route::post('trading-rules/reorder',  [TradingRuleController::class, 'reorder']);
+    Route::get('trading-rules',                      [TradingRuleController::class, 'index']);
+    Route::post('trading-rules',                     [TradingRuleController::class, 'store']);
+    Route::put('trading-rules/{tradingRule}',         [TradingRuleController::class, 'update']);
+    Route::delete('trading-rules/{tradingRule}',      [TradingRuleController::class, 'destroy']);
+    Route::post('trading-rules/reorder',             [TradingRuleController::class, 'reorder']);
 
-    // Superuser — users + subscription admin
+    // Backtesting
+    Route::get('backtest/summary',                                             [BacktestController::class, 'summary']);
+    Route::get('backtest/sessions',                                            [BacktestController::class, 'sessions']);
+    Route::post('backtest/sessions',                                           [BacktestController::class, 'createSession']);
+    Route::put('backtest/sessions/{backtestSession}',                          [BacktestController::class, 'updateSession']);
+    Route::delete('backtest/sessions/{backtestSession}',                       [BacktestController::class, 'deleteSession']);
+    Route::get('backtest/sessions/{backtestSession}/stats',                    [BacktestController::class, 'sessionStats']);
+    Route::get('backtest/sessions/{backtestSession}/trades',                   [BacktestController::class, 'trades']);
+    Route::post('backtest/sessions/{backtestSession}/trades',                  [BacktestController::class, 'storeTrade']);
+    Route::post('backtest/sessions/{backtestSession}/trades/{backtestTrade}',  [BacktestController::class, 'updateTrade']);
+    Route::delete('backtest/sessions/{backtestSession}/trades/{backtestTrade}',[BacktestController::class, 'destroyTrade']);
+
+    // Superuser
     Route::middleware('superuser')->group(function () {
         Route::apiResource('admin/users', UserManagementController::class);
         Route::post('admin/users/{user}/toggle-active',   [UserManagementController::class,    'toggleActive']);

@@ -238,11 +238,12 @@ export default {
     // Always accessible — dashboard, analytics, categories, pairs, account
     freeItems() {
       return [
-        { to: '/',               label: 'Dashboard',         icon: '📊' },
-        { to: '/analytics',      label: 'Analytics',         icon: '📈' },
-        { to: '/invalid-trades', label: 'Invalid Patterns',  icon: '⛔' },
-        { to: '/categories',     label: 'Categories',        icon: '🏷️' },
-        { to: '/pairs',          label: 'Pairs',             icon: '💱' },
+        { to: '/',               label: 'Dashboard',        icon: '📊' },
+        { to: '/analytics',      label: 'Analytics',        icon: '📈' },
+        { to: '/backtest',       label: 'Backtest Journal',  icon: '🧪' },
+        { to: '/invalid-trades', label: 'Invalid Patterns', icon: '⛔' },
+        { to: '/categories',     label: 'Categories',       icon: '🏷️' },
+        { to: '/pairs',          label: 'Pairs',            icon: '💱' },
       ]
     },
 
