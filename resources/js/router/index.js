@@ -54,6 +54,12 @@ const routes = [
         meta: { auth: true }
     },
     {
+        path: '/journal/:id/edit',
+        name: 'journal-edit',
+        component: () => import('../views/JournalFormView.vue'),
+        meta: { auth: true }
+    },
+    {
         path: '/journal/:id',
         name: 'journal-detail',
         component: () => import('../views/JournalDetailView.vue'),
