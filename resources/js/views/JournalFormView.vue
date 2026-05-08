@@ -73,6 +73,66 @@
           </div>
         </div>
 
+        <!-- Post-trade results (always editable) -->
+        <div class="card space-y-4">
+          <h2 class="section-title">Result & Rules</h2>
+          <p class="text-xs text-gray-500">Leave blank if this is a pre-trade plan only.</p>
+
+          <div>
+            <label class="label">Result</label>
+            <div class="flex gap-2">
+              <button v-for="r in ['win','loss','breakeven']" :key="r"
+                type="button"
+                class="flex-1 py-2.5 rounded-lg text-sm font-bold border capitalize transition-colors"
+                :class="form.result === r
+                  ? r==='win'  ? 'bg-win/20 border-win text-win'
+                  : r==='loss' ? 'bg-loss/20 border-loss text-loss'
+                  : 'bg-gray-700/40 border-gray-600 text-gray-300'
+                  : 'bg-surface border-border text-gray-500 hover:text-gray-300'"
+                @click="form.result = form.result === r ? '' : r">
+                {{ r }}
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="label">R Multiple</label>
+              <input v-model="form.r_multiple" type="number" step="0.01" class="input" placeholder="e.g. 2.5 or -1.0" />
+            </div>
+            <div>
+              <label class="label">Pips Result</label>
+              <input v-model="form.pips_result" type="number" step="0.1" class="input" placeholder="e.g. 25.5 or -12.0" />
+            </div>
+          </div>
+
+          <div>
+            <label class="label">Followed Rules?</label>
+            <div class="flex gap-3">
+              <button type="button"
+                class="flex-1 py-2 rounded-lg text-sm font-semibold border transition-colors"
+                :class="form.followed_rules ? 'bg-win/15 border-win text-win' : 'bg-surface border-border text-gray-500'"
+                @click="form.followed_rules = true">✓ Yes — Disciplined</button>
+              <button type="button"
+                class="flex-1 py-2 rounded-lg text-sm font-semibold border transition-colors"
+                :class="!form.followed_rules ? 'bg-loss/15 border-loss text-loss' : 'bg-surface border-border text-gray-500'"
+                @click="form.followed_rules = false">✗ No — Impulsive</button>
+            </div>
+          </div>
+
+          <div>
+            <label class="label">Post-Trade Notes</label>
+            <textarea v-model="form.post_trade_notes" class="textarea" rows="3"
+              placeholder="What happened? What did you observe after the trade?"></textarea>
+          </div>
+
+          <div>
+            <label class="label">Mistakes</label>
+            <textarea v-model="form.mistakes" class="textarea" rows="2"
+              placeholder="What would you do differently?"></textarea>
+          </div>
+        </div>
+
         <!-- Chart images -->
         <div class="card">
           <h2 class="section-title">Chart Screenshots</h2>
@@ -136,6 +196,13 @@ export default {
         entry_technique:    '',
         pre_trade_notes:    '',
         trade_date:         '',
+        // Post-trade fields
+        result:             '',
+        r_multiple:         '',
+        pips_result:        '',
+        followed_rules:     true,
+        post_trade_notes:   '',
+        mistakes:           '',
       },
     }
   },
@@ -167,6 +234,12 @@ export default {
           entry_technique:    data.entry_technique    || '',
           pre_trade_notes:    data.pre_trade_notes    || '',
           trade_date:         data.trade_date         ? data.trade_date.slice(0, 16) : '',
+          result:             data.result             || '',
+          r_multiple:         data.r_multiple         != null ? data.r_multiple  : '',
+          pips_result:        data.pips_result        != null ? data.pips_result : '',
+          followed_rules:     data.followed_rules     != null ? Boolean(data.followed_rules) : true,
+          post_trade_notes:   data.post_trade_notes   || '',
+          mistakes:           data.mistakes           || '',
         }
       } catch(e) {
         this.error = 'Failed to load journal entry.'
@@ -182,9 +255,33 @@ export default {
       this.error  = ''
       try {
         const fd = new FormData()
-        Object.entries(this.form).forEach(([k, v]) => {
-          if (v !== '' && v !== null && v !== undefined) fd.append(k, v)
+
+        // Pre-trade fields
+        const preFields = ['trading_session_id','pair_id','h4_category_id','m15_category_id','m1_category_id','entry_technique','pre_trade_notes','trade_date']
+        preFields.forEach(k => {
+          if (this.form[k] !== '' && this.form[k] != null) fd.append(k, this.form[k])
         })
+
+        // Post-trade fields — only append if result is set
+        if (this.form.result) {
+          fd.append('result', this.form.result)
+          fd.append('followed_rules', this.form.followed_rules ? '1' : '0')
+          if (this.form.r_multiple !== '' && this.form.r_multiple != null)   fd.append('r_multiple',       this.form.r_multiple)
+          if (this.form.pips_result !== '' && this.form.pips_result != null) fd.append('pips_result',      this.form.pips_result)
+          if (this.form.post_trade_notes) fd.append('post_trade_notes', this.form.post_trade_notes)
+          if (this.form.mistakes)         fd.append('mistakes',         this.form.mistakes)
+          // Mark as completed if result is provided
+          fd.append('status', 'completed')
+        } else {
+          // No result — keep as pre if new, preserve status if editing
+          if (!this.isEdit) fd.append('status', 'pre')
+          // Still save followed_rules and notes even without result
+          fd.append('followed_rules', this.form.followed_rules ? '1' : '0')
+          if (this.form.post_trade_notes) fd.append('post_trade_notes', this.form.post_trade_notes)
+          if (this.form.mistakes)         fd.append('mistakes',         this.form.mistakes)
+        }
+
+        // Images
         if (this.images.H4)  fd.append('h4_image',  this.images.H4)
         if (this.images.M15) fd.append('m15_image', this.images.M15)
         if (this.images.M1)  fd.append('m1_image',  this.images.M1)
