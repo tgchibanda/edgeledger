@@ -79,10 +79,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('backtest/sessions/{backtestSession}',                          [BacktestController::class, 'updateSession']);
     Route::delete('backtest/sessions/{backtestSession}',                       [BacktestController::class, 'deleteSession']);
     Route::get('backtest/sessions/{backtestSession}/stats',                    [BacktestController::class, 'sessionStats']);
-    Route::get('backtest/sessions/{backtestSession}/trades',                   [BacktestController::class, 'trades']);
-    Route::post('backtest/sessions/{backtestSession}/trades',                  [BacktestController::class, 'storeTrade']);
-    Route::post('backtest/sessions/{backtestSession}/trades/{backtestTrade}',  [BacktestController::class, 'updateTrade']);
-    Route::delete('backtest/sessions/{backtestSession}/trades/{backtestTrade}',[BacktestController::class, 'destroyTrade']);
+    Route::get('backtest/sessions/{backtestSession}/trades',                    [BacktestController::class, 'trades']);
+    Route::post('backtest/sessions/{backtestSession}/trades',                   [BacktestController::class, 'storeTrade']);
+    Route::put('backtest/sessions/{backtestSession}/trades/{backtestTrade}',    [BacktestController::class, 'updateTrade']);
+    Route::post('backtest/sessions/{backtestSession}/trades/{backtestTrade}',   [BacktestController::class, 'updateTrade']);
+    Route::delete('backtest/sessions/{backtestSession}/trades/{backtestTrade}', [BacktestController::class, 'destroyTrade']);
 
     // Superuser
     Route::middleware('superuser')->group(function () {
